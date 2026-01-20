@@ -1,0 +1,62 @@
+{
+  "work": [
+    {
+      "company": "Kalvium",
+      "role": "Founder's Office Intern - Enterprise Strategy and Market Intelligence",
+      "startDate": "2025-07",
+      "endDate": "2025-09",
+      "current": false,
+      "location": "Bangalore",
+      "achievements": [
+        "Analyzed potential industry verticals and built a qualified pipeline of 700+ potential enterprise partners, prioritizing prospects based on growth potential and alignment with Kalvium's services.",
+        "Secured 8 new enterprise partnerships by managing the end-to-end business development cycle, from market analysis, outreach to deal closure."
+      ]
+    },
+    {
+      "company": "Acetech Group",
+      "role": "Data Analytics Intern",
+      "startDate": "2024-06",
+      "endDate": "2024-07",
+      "current": false,
+      "location": "Chennai",
+      "achievements": [
+        "Automated KPI reporting by engineering a real-time Tableau dashboard that aggregated data from 15+ APIs, eliminating 16-18 hours of weekly manual data collection and transformation.",
+        "Engineered Python-based data ingestion pipelines for multiple sources into an AWS S3 Glacier data lake, creating a highly reliable data archive."
+      ]
+    },
+    {
+      "company": "Profisolutions Private Limited",
+      "role": "Automation and Analytics Intern",
+      "startDate": "2024-06",
+      "endDate": "2024-07",
+      "current": false,
+      "location": "Chennai",
+      "achievements": [
+        "Developed an automated monitoring workflow for PLC-SCADA systems, using Python and PostgreSQL to cut incident detection and diagnosis time.",
+        "Modernized 3 legacy calculation tools by migrating the core logic from PL/SQL to Python, enabling them to be deployed across multiple new platforms and systems."
+      ]
+    },
+    {
+      "company": "SRM Sketch - Technical Club",
+      "role": "Domain Leader - Research and Development",
+      "startDate": "2024-01",
+      "endDate": "2025-04",
+      "current": false,
+      "location": "Chennai",
+      "achievements": [
+        "Spearheaded a 15-member team in executing 20+ knowledge-sharing workshops, bolstering peer skill development while overseeing all internal club operations."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "SRM Institute of Science and Technology, Ramapuram",
+      "degree": "Bachelor of Technology",
+      "field": "Computer Science and Engineering",
+      "startDate": "2022",
+      "endDate": "2026",
+      "current": true,
+      "grade": "CGPA: 9.31"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "name": "Rogit S",
+  "title": "B.Tech Computer Science & Engineering",
+  "institution": "SRM Institute of Science and Technology, Ramapuram",
+  "location": "Chennai, India",
+  "bio": {
+    "short": "Computer Science student focused on Data Engineering, AI/ML, and Business Analytics.",
+    "long": "I'm a Computer Science and Engineering student at SRM Institute of Science and Technology with a strong focus on Data Engineering, Artificial Intelligence, and Business Analytics. I have hands-on experience building data pipelines, automating workflows, and developing ML solutions through internships at Kalvium, Acetech Group, and Profisolutions."
+  },
+  "email": "rogitsudharsan81@gmail.com",
+  "social": {
+    "linkedin": "https://www.linkedin.com/in/rogit-s-830647225/",
+    "github": "https://github.com/Rogit-28"
+  },
+  "blog": {
+    "platform": "substack",
+    "url": "https://substack.com/@r28r"
+  },
+  "resume": "/resume.pdf",
+  "skills": {
+    "languages": ["Python", "SQL"],
+    "tools": [
+      "MongoDB",
+      "NumPy",
+      "Pandas",
+      "PostgreSQL",
+      "PyTorch",
+      "Scikit-Learn",
+      "Tableau",
+      "TensorFlow",
+      "AWS",
+      "OpenCV",
+      "FastAPI"
+    ],
+    "interests": [
+      "Agentic AI",
+      "Artificial Intelligence",
+      "Machine Learning",
+      "Business Analytics",
+      "Business Intelligence",
+      "Data Engineering",
+      "Data Science",
+      "Predictive Analytics",
+      "Statistical Modelling"
+    ],
+    "soft": [
+      "Attention to Detail",
+      "Competitiveness",
+      "Critical Thinking",
+      "Data Driven Decision-making",
+      "Leadership"
+    ]
+  },
+  "research": [
+    {
+      "title": "Enhanced Neural Style Transfer using VGG-19 and Gram Matrix Computation",
+      "publication": "FMDB Transactions on Sustainable Computing Systems",
+      "doi": "10.69888/FTSCS.2025.000376",
+      "url": "https://doi.org/10.69888/FTSCS.2025.000376",
+      "description": "Developed and benchmarked VGGram, a Neural Style Transfer model, achieving the highest SSIM of 0.742 and PSNR of 23.8 dB among tested architectures."
+    }
+  ]
+}
