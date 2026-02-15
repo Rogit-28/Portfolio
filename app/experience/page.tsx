@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { Container } from "@/components/layout/container";
-import { TimelineEntry, EducationEntry, ScrollTimeline } from "@/components/sections/timeline";
+import { TimelineEntry, EducationEntry } from "@/components/sections/timeline";
 import experienceData from "@/data/experience.json";
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export default function ExperiencePage() {
       {/* Work Experience */}
       <section className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Experience</h1>
-        <ScrollTimeline>
+        <div>
           {experienceData.work.map((job, index) => (
             <TimelineEntry
               key={`${job.company}-${job.startDate}`}
@@ -28,13 +28,13 @@ export default function ExperiencePage() {
               index={index}
             />
           ))}
-        </ScrollTimeline>
+        </div>
       </section>
 
       {/* Education */}
       <section>
         <h2 className="text-2xl font-semibold mb-4">Education</h2>
-        <ScrollTimeline>
+        <div>
           {experienceData.education.map((edu, index) => (
             <EducationEntry
               key={`${edu.institution}-${edu.startDate}`}
@@ -48,7 +48,7 @@ export default function ExperiencePage() {
               index={index}
             />
           ))}
-        </ScrollTimeline>
+        </div>
       </section>
     </Container>
   );

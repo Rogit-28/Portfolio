@@ -406,10 +406,10 @@ a {
 
 @keyframes shimmer {
   0% {
-    background-position: -200% center;
+    background-position: 200% center;
   }
   100% {
-    background-position: 200% center;
+    background-position: -200% center;
   }
 }
 
@@ -447,39 +447,29 @@ a {
 }
 
 /* ============================================
-   Timeline Scroll Animations
+   Timeline Animations
    ============================================ */
 
-/* Active dot glow */
-.timeline-dot-active {
-  box-shadow: 0 0 6px 2px var(--accent);
-  animation: timeline-pulse 2s ease-in-out infinite;
+/* One-time vertical shimmer sweep on the timeline line */
+.timeline-line-shimmer {
+  background: linear-gradient(
+    180deg,
+    var(--border) 0%,
+    var(--border) 35%,
+    var(--accent) 50%,
+    var(--border) 65%,
+    var(--border) 100%
+  );
+  background-size: auto 300%;
+  background-position: center 100%;
+  animation: timeline-shimmer 1.8s ease-in-out 0.3s forwards;
 }
 
-@keyframes timeline-pulse {
-  0%, 100% {
-    box-shadow: 0 0 6px 2px var(--accent);
-  }
-  50% {
-    box-shadow: 0 0 12px 4px var(--accent);
-  }
-}
-
-/* Ripple ring that expands outward once */
-.timeline-dot-ripple {
-  background: transparent;
-  border: 2px solid var(--accent);
-  animation: timeline-ripple 0.8s ease-out forwards;
-  pointer-events: none;
-}
-
-@keyframes timeline-ripple {
+@keyframes timeline-shimmer {
   0% {
-    transform: translate(-50%, 0) scale(1);
-    opacity: 0.7;
+    background-position: center 100%;
   }
   100% {
-    transform: translate(-50%, 0) scale(3.5);
-    opacity: 0;
+    background-position: center 0%;
   }
 }
