@@ -44,10 +44,10 @@ export function TimelineEntry({
 }: TimelineEntryProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: -12 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay: index * 0.15 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.06, 0.2) }}
       className="relative pl-8 pb-6 last:pb-0"
     >
       {/* Timeline dot - springs in */}
@@ -59,7 +59,7 @@ export function TimelineEntry({
           type: "spring",
           stiffness: 300,
           damping: 15,
-          delay: index * 0.15 + 0.2,
+          delay: Math.min(index * 0.06, 0.2) + 0.1,
         }}
         className="absolute left-0 top-2 w-2 h-2 -translate-x-1/2 rounded-full bg-accent"
       />
@@ -142,10 +142,10 @@ export function EducationEntry({
 }: EducationEntryProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: -12 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, delay: index * 0.15 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.06, 0.2) }}
       className="relative pl-8 pb-4 last:pb-0"
     >
       {/* Timeline dot - springs in */}
@@ -157,7 +157,7 @@ export function EducationEntry({
           type: "spring",
           stiffness: 300,
           damping: 15,
-          delay: index * 0.15 + 0.2,
+          delay: Math.min(index * 0.06, 0.2) + 0.1,
         }}
         className="absolute left-0 top-2 w-2 h-2 -translate-x-1/2 rounded-full bg-accent"
       />
