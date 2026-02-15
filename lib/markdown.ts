@@ -228,6 +228,13 @@ export function parseReadme(markdown: string): ParsedReadme {
   };
 }
 
+export function parseReadmePreview(markdown: string): { firstImage: string | null; summary: string } {
+  return {
+    firstImage: extractFirstImage(markdown),
+    summary: extractSummary(markdown),
+  };
+}
+
 /**
  * Render a single section's content to HTML (sanitized)
  */

@@ -3,20 +3,31 @@ import {
   GitHubReadmeResponse,
   GitHubGraphQLResponse,
   Project,
+  ReadmePreview,
 } from "@/types/project";
-import { parseReadme } from "./markdown";
+import { parseReadme, parseReadmePreview } from "./markdown";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_USERNAME = process.env.GITHUB_USERNAME || "Rogit-28";
 const GITHUB_API_BASE = "https://api.github.com";
 const GITHUB_GRAPHQL_API = "https://api.github.com/graphql";
 
-// Batch size for infinite scroll
-export const PROJECTS_BATCH_SIZE = 6;
+// Batch size for pagination
+export const PROJECTS_BATCH_SIZE = 10;
 
 // Rate limit tracking
 let rateLimitRemaining: number | null = null;
 let rateLimitReset: number | null = null;
+
+const README_CACHE_TTL_MS = 1000 * 60 * 60;
+const readmePreviewCache = new Map<
+  string,
+  { value: ReadmePreview | null; expiresAt: number }
+>();
+const readmeFullCache = new Map<
+  string,
+  { value: ReturnType<typeof parseReadme> | null; expiresAt: number }
+>();
 
 /**
  * Check if we're rate limited
@@ -47,30 +58,23 @@ function updateRateLimitFromResponse(response: Response): void {
   }
 }
 
+const DEFAULT_HEADERS: HeadersInit = {
+  Accept: "application/vnd.github.v3+json",
+  "User-Agent": "portfolio-website",
+};
+
 // Common headers for GitHub API
-function getHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    Accept: "application/vnd.github.v3+json",
-    "User-Agent": "portfolio-website",
-  };
-
-  if (GITHUB_TOKEN) {
-    headers.Authorization = `Bearer ${GITHUB_TOKEN}`;
-  }
-
-  return headers;
-}
-
-// GraphQL headers
-function getGraphQLHeaders(): HeadersInit {
+function getHeaders(requireAuth = false): HeadersInit {
   if (!GITHUB_TOKEN) {
-    throw new Error("GITHUB_TOKEN is required for GraphQL API");
+    if (requireAuth) {
+      throw new Error("GITHUB_TOKEN is required for this request");
+    }
+    return DEFAULT_HEADERS;
   }
 
   return {
+    ...DEFAULT_HEADERS,
     Authorization: `Bearer ${GITHUB_TOKEN}`,
-    "Content-Type": "application/json",
-    "User-Agent": "portfolio-website",
   };
 }
 
@@ -78,13 +82,7 @@ function getGraphQLHeaders(): HeadersInit {
  * Fetch pinned repositories using GraphQL API
  */
 export async function fetchPinnedRepos(): Promise<string[]> {
-  if (!GITHUB_TOKEN) {
-    console.warn("GITHUB_TOKEN not set, skipping pinned repos fetch");
-    return [];
-  }
-
-  if (isRateLimited()) {
-    console.warn("Rate limited, skipping pinned repos fetch");
+  if (!GITHUB_TOKEN || isRateLimited()) {
     return [];
   }
 
@@ -102,10 +100,14 @@ export async function fetchPinnedRepos(): Promise<string[]> {
     }
   `;
 
+  if (!GITHUB_TOKEN) {
+    return [];
+  }
+
   try {
     const response = await fetch(GITHUB_GRAPHQL_API, {
       method: "POST",
-      headers: getGraphQLHeaders(),
+      headers: getHeaders(true),
       body: JSON.stringify({
         query,
         variables: { username: GITHUB_USERNAME },
@@ -122,7 +124,9 @@ export async function fetchPinnedRepos(): Promise<string[]> {
     const data: GitHubGraphQLResponse = await response.json();
     return data.data.user.pinnedItems.nodes.map((node) => node.name);
   } catch (error) {
-    console.error("Failed to fetch pinned repos:", error);
+    if (GITHUB_TOKEN) {
+      console.error("Failed to fetch pinned repos:", error);
+    }
     return [];
   }
 }
@@ -132,7 +136,6 @@ export async function fetchPinnedRepos(): Promise<string[]> {
  */
 export async function fetchAllRepos(): Promise<GitHubRepo[]> {
   if (isRateLimited()) {
-    console.warn("Rate limited, returning empty repos list");
     return [];
   }
 
@@ -150,14 +153,15 @@ export async function fetchAllRepos(): Promise<GitHubRepo[]> {
 
     const repos: GitHubRepo[] = await response.json();
 
-    // Filter out repos with "(Building)" in name and the profile config repo
     return repos.filter(
       (repo) =>
         !repo.name.includes("(Building)") &&
-        repo.name !== GITHUB_USERNAME // Exclude profile README repo
+        repo.name !== GITHUB_USERNAME
     );
   } catch (error) {
-    console.error("Failed to fetch repos:", error);
+    if (GITHUB_TOKEN) {
+      console.error("Failed to fetch repos:", error);
+    }
     return [];
   }
 }
@@ -165,9 +169,7 @@ export async function fetchAllRepos(): Promise<GitHubRepo[]> {
 /**
  * Fetch README content for a repository
  */
-export async function fetchRepoReadme(
-  repoName: string
-): Promise<string | null> {
+async function fetchRepoReadmeContent(repoName: string): Promise<string | null> {
   if (isRateLimited()) {
     return null;
   }
@@ -196,6 +198,61 @@ export async function fetchRepoReadme(
     console.error(`Failed to fetch README for ${repoName}:`, error);
     return null;
   }
+}
+
+function getCachedReadme<T>(
+  cache: Map<string, { value: T | null; expiresAt: number }>,
+  repoName: string
+): { hit: boolean; value: T | null } {
+  const cached = cache.get(repoName);
+  if (!cached) return { hit: false, value: null };
+  if (Date.now() > cached.expiresAt) {
+    cache.delete(repoName);
+    return { hit: false, value: null };
+  }
+  return { hit: true, value: cached.value };
+}
+
+function setCachedReadme<T>(
+  cache: Map<string, { value: T | null; expiresAt: number }>,
+  repoName: string,
+  value: T | null
+) {
+  cache.set(repoName, { value, expiresAt: Date.now() + README_CACHE_TTL_MS });
+}
+
+export async function fetchRepoReadmePreview(
+  repoName: string
+): Promise<ReadmePreview | null> {
+  const { hit, value } = getCachedReadme(readmePreviewCache, repoName);
+  if (hit) return value;
+
+  const content = await fetchRepoReadmeContent(repoName);
+  if (!content) {
+    setCachedReadme(readmePreviewCache, repoName, null);
+    return null;
+  }
+
+  const preview = parseReadmePreview(content);
+  setCachedReadme(readmePreviewCache, repoName, preview);
+  return preview;
+}
+
+export async function fetchRepoReadmeFull(
+  repoName: string
+): Promise<ReturnType<typeof parseReadme> | null> {
+  const { hit, value } = getCachedReadme(readmeFullCache, repoName);
+  if (hit) return value;
+
+  const content = await fetchRepoReadmeContent(repoName);
+  if (!content) {
+    setCachedReadme(readmeFullCache, repoName, null);
+    return null;
+  }
+
+  const parsed = parseReadme(content);
+  setCachedReadme(readmeFullCache, repoName, parsed);
+  return parsed;
 }
 
 /**
@@ -271,12 +328,18 @@ export async function repoToProject(
 
   if (fetchFullData) {
     const [readmeContent, langData] = await Promise.all([
-      fetchRepoReadme(repo.name),
+      fetchRepoReadmeFull(repo.name),
       fetchRepoLanguages(repo.name),
     ]);
-    parsedReadme = readmeContent ? parseReadme(readmeContent) : null;
+    parsedReadme = readmeContent;
     languages = langData;
   }
+
+  const preview = fetchFullData
+    ? parsedReadme
+      ? { firstImage: parsedReadme.firstImage, summary: parsedReadme.summary }
+      : null
+    : null;
 
   const externalUrl = extractUrlFromDescription(repo.description);
 
@@ -303,6 +366,7 @@ export async function repoToProject(
     isFork: repo.fork,
 
     readme: parsedReadme,
+    readmePreview: preview,
   };
 }
 
@@ -311,8 +375,17 @@ export async function repoToProject(
  */
 export interface ProjectsResponse {
   pinned: Project[];
-  initial: Project[];
-  totalRemaining: number;
+  totalNonPinned: number;
+  rateLimited: boolean;
+}
+
+export interface ProjectsPageResponse {
+  projects: Project[];
+  currentPage: number;
+  totalPages: number;
+  totalProjects: number;
+  hasNext: boolean;
+  hasPrev: boolean;
   rateLimited: boolean;
 }
 
@@ -337,29 +410,32 @@ export async function getInitialProjects(): Promise<ProjectsResponse> {
     pinnedRepos.map((repo) => repoToProject(repo, true, true))
   );
 
-  // Fetch full data for first batch of non-pinned repos
-  const initialBatch = nonPinnedRepos.slice(0, PROJECTS_BATCH_SIZE);
-  const initialProjects = await Promise.all(
-    initialBatch.map((repo) => repoToProject(repo, false, true))
-  );
-
   return {
     pinned: pinnedProjects,
-    initial: initialProjects,
-    totalRemaining: Math.max(0, nonPinnedRepos.length - PROJECTS_BATCH_SIZE),
+    totalNonPinned: nonPinnedRepos.length,
     rateLimited: isRateLimited(),
   };
 }
 
 /**
- * Get a batch of projects for infinite scroll (server-side, called by API route)
+ * Get a paginated page of non-pinned projects
  */
-export async function getProjectsBatch(
-  offset: number
-): Promise<{ projects: Project[]; hasMore: boolean; rateLimited: boolean }> {
+export async function getProjectsPage(
+  page: number
+): Promise<ProjectsPageResponse> {
   if (isRateLimited()) {
-    return { projects: [], hasMore: false, rateLimited: true };
+    return {
+      projects: [],
+      currentPage: page,
+      totalPages: 0,
+      totalProjects: 0,
+      hasNext: false,
+      hasPrev: false,
+      rateLimited: true,
+    };
   }
+
+  const currentPage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
 
   // Fetch all repos and pinned names
   const [pinnedRepoNames, repos] = await Promise.all([
@@ -371,28 +447,39 @@ export async function getProjectsBatch(
 
   // Get non-pinned repos sorted by pushed_at (already sorted from API)
   const nonPinnedRepos = repos.filter((r) => !pinnedSet.has(r.name));
+  const totalProjects = nonPinnedRepos.length;
+  const totalPages = Math.max(1, Math.ceil(totalProjects / PROJECTS_BATCH_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const safeOffset = (safePage - 1) * PROJECTS_BATCH_SIZE;
+
+  if (totalProjects === 0) {
+    return {
+      projects: [],
+      currentPage: 1,
+      totalPages: 1,
+      totalProjects: 0,
+      hasNext: false,
+      hasPrev: false,
+      rateLimited: false,
+    };
+  }
 
   // Get the batch
-  const batch = nonPinnedRepos.slice(offset, offset + PROJECTS_BATCH_SIZE);
-  const hasMore = offset + PROJECTS_BATCH_SIZE < nonPinnedRepos.length;
+  const batch = nonPinnedRepos.slice(safeOffset, safeOffset + PROJECTS_BATCH_SIZE);
 
-  // Fetch full data for this batch
+  // Fetch lightweight data for this batch
   const projects = await Promise.all(
-    batch.map((repo) => repoToProject(repo, false, true))
+    batch.map((repo) => repoToProject(repo, false, false))
   );
 
   return {
     projects,
-    hasMore,
+    currentPage: safePage,
+    totalPages,
+    totalProjects,
+    hasNext: safePage < totalPages,
+    hasPrev: safePage > 1,
     rateLimited: isRateLimited(),
   };
 }
 
-/**
- * Legacy function for backward compatibility
- * @deprecated Use getInitialProjects() instead
- */
-export async function getProjects(): Promise<Project[]> {
-  const { pinned, initial } = await getInitialProjects();
-  return [...pinned, ...initial];
-}

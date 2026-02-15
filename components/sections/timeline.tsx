@@ -76,10 +76,10 @@ export function TimelineEntry({
             {achievements.map((achievement, i) => (
               <li
                 key={i}
-                className="text-sm text-muted-foreground flex items-start gap-2"
+                className="text-sm text-muted-foreground flex gap-2"
               >
-                <span className="text-accent mt-1.5 flex-shrink-0">•</span>
-                <span>{achievement}</span>
+                <span className="text-accent flex-shrink-0 leading-[1.6]">•</span>
+                <span className="leading-[1.6]">{achievement}</span>
               </li>
             ))}
           </ul>

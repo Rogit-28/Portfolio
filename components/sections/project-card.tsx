@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Project } from "@/types/project";
 import { Tag } from "@/components/ui/tag";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,11 @@ interface ProjectCardProps {
   project: Project;
   index: number;
   onExpand?: (project: Project) => void;
+}
+
+interface ReadmePreviewState {
+  firstImage: string | null;
+  summary: string;
 }
 
 // Language color mapping for visual distinction
@@ -33,14 +39,63 @@ const languageColors: Record<string, string> = {
 export function ProjectCard({ project, index, onExpand }: ProjectCardProps) {
   const hasLiveDemo = project.homepage || project.externalUrl;
   const demoUrl = project.homepage || project.externalUrl;
+  const cardRef = useRef<HTMLElement>(null);
+  const [preview, setPreview] = useState<ReadmePreviewState | null>(
+    project.readmePreview
+      ? {
+          firstImage: project.readmePreview.firstImage,
+          summary: project.readmePreview.summary,
+        }
+      : null
+  );
+
+  const showReadmePreview = useMemo(() => {
+    if (project.isPinned) return true;
+    return !!preview?.firstImage || !!preview?.summary;
+  }, [project.isPinned, preview]);
 
   // Get language color
   const langColor = project.language
     ? languageColors[project.language] || languageColors.default
     : languageColors.default;
 
+  useEffect(() => {
+    if (project.isPinned || preview || !cardRef.current) return;
+
+    const card = cardRef.current;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry.isIntersecting) return;
+
+        observer.disconnect();
+
+        fetch(`/api/projects/readme?repo=${encodeURIComponent(project.name)}`)
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => {
+            if (!data?.preview) {
+              setPreview({ firstImage: null, summary: "" });
+              return;
+            }
+            setPreview(data.preview);
+          })
+          .catch((error) => {
+            console.error("Failed to fetch README preview", error);
+          });
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(card);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [project.isPinned, project.name, preview]);
+
   return (
     <motion.article
+      ref={cardRef}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
@@ -66,9 +121,9 @@ export function ProjectCard({ project, index, onExpand }: ProjectCardProps) {
 
         {/* Image/Preview area */}
         <div className="relative h-40 overflow-hidden bg-muted">
-          {project.readme?.firstImage ? (
+          {showReadmePreview && preview?.firstImage ? (
             <Image
-              src={project.readme.firstImage}
+              src={preview.firstImage}
               alt={project.displayName}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -124,7 +179,7 @@ export function ProjectCard({ project, index, onExpand }: ProjectCardProps) {
 
           {/* Description */}
           <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-            {project.description || project.readme?.summary || "No description available"}
+            {project.description || preview?.summary || "No description available"}
           </p>
 
           {/* Tags */}

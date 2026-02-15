@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ExperiencePage() {
   return (
-    <Container className="py-6">
+    <Container className="pt-16 md:pt-24 pb-6">
       {/* Work Experience */}
       <section className="mb-8">
         <h1 className="text-3xl font-bold mb-4">Experience</h1>

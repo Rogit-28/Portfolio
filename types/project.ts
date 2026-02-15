@@ -9,6 +9,11 @@ export interface ParsedReadme {
   links: string[];
 }
 
+export interface ReadmePreview {
+  firstImage: string | null;
+  summary: string;
+}
+
 export interface ReadmeSection {
   heading: string;
   content: string;
@@ -42,6 +47,7 @@ export interface Project {
 
   // README content
   readme: ParsedReadme | null;
+  readmePreview: ReadmePreview | null;
 }
 
 // GitHub API response types

@@ -9,6 +9,7 @@
   --accent: #B91C1C;
   --accent-hover: #991B1B;
   --accent-foreground: #ffffff;
+  --accent-soft: #DC2626;
 }
 
 .dark {
@@ -20,6 +21,7 @@
   --accent: #DC2626;
   --accent-hover: #EF4444;
   --accent-foreground: #ffffff;
+  --accent-soft: #EF4444;
 }
 
 @theme inline {
@@ -31,6 +33,7 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -118,14 +121,23 @@ a {
 .prose li {
   margin-bottom: 0.5em;
   line-height: 1.6;
+  padding-left: 0.25em;
 }
 
 .prose ul li {
   list-style-type: disc;
 }
 
+.prose ul li::marker {
+  color: var(--accent);
+}
+
 .prose ol li {
   list-style-type: decimal;
+}
+
+.prose ol li::marker {
+  color: var(--accent);
 }
 
 .prose code {
@@ -354,4 +366,36 @@ a {
 
 .gradient-bg {
   position: relative;
+}
+
+/* ============================================
+   Flip Card 3D Animation
+   ============================================ */
+
+.flip-card {
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.flip-card-flipped {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.backface-hidden {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.rotate-y-180 {
+  transform: rotateY(180deg);
 }

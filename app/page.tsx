@@ -6,11 +6,18 @@ import { Research } from "@/components/sections/research";
 
 export default function Home() {
   return (
-    <Container className="py-8">
+    <>
+      {/* Hero is full-width, outside container */}
       <Hero />
-      <Bio />
-      <Skills />
-      <Research />
-    </Container>
+
+      {/* Rest of content in container */}
+      <Container className="pt-8 pb-16">
+        <section id="about" className="scroll-mt-20">
+          <Bio />
+        </section>
+        <Skills />
+        <Research />
+      </Container>
+    </>
   );
 }

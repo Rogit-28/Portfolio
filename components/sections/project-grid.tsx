@@ -1,88 +1,106 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Project } from "@/types/project";
 import { ProjectCard } from "./project-card";
 import { ProjectModal } from "./project-modal";
-import { PROJECTS_BATCH_SIZE } from "@/lib/github";
 
 interface ProjectGridProps {
   pinnedProjects: Project[];
-  initialProjects: Project[];
-  totalRemaining: number;
+  totalNonPinned: number;
+}
+
+interface ProjectsPageResult {
+  projects: Project[];
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  rateLimited?: boolean;
 }
 
 export function ProjectGrid({
   pinnedProjects,
-  initialProjects,
-  totalRemaining,
+  totalNonPinned,
 }: ProjectGridProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pageParam = searchParams.get("page");
+  const pageFromUrl = pageParam ? parseInt(pageParam, 10) : 1;
+  const currentPage = Number.isFinite(pageFromUrl) && pageFromUrl > 0 ? pageFromUrl : 1;
+  const safePage = Math.min(currentPage, Math.max(1, Math.ceil(totalNonPinned / 10)));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [hasMore, setHasMore] = useState(totalRemaining > 0);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [pagination, setPagination] = useState<ProjectsPageResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Track current offset for pagination
-  const offsetRef = useRef(PROJECTS_BATCH_SIZE);
-  const loaderRef = useRef<HTMLDivElement>(null);
-
-  // Fetch next batch of projects
-  const fetchMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
+  const pinnedIds = useMemo(
+    () => new Set(pinnedProjects.map((project) => project.id)),
+    [pinnedProjects]
+  );
+  useEffect(() => {
+    if (!Number.isFinite(safePage) || safePage < 1) return;
 
     setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch(`/api/projects?offset=${offsetRef.current}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch projects");
-      }
+    const controller = new AbortController();
 
-      const data = await response.json();
-
-      if (data.rateLimited) {
-        setError("Rate limited. Please try again later.");
-        setHasMore(false);
-        return;
-      }
-
-      setProjects((prev) => [...prev, ...data.projects]);
-      setHasMore(data.hasMore);
-      offsetRef.current += PROJECTS_BATCH_SIZE;
-    } catch (err) {
-      setError("Failed to load more projects");
-      console.error("Error fetching projects:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isLoading, hasMore]);
-
-  // Set up intersection observer for infinite scroll
-  useEffect(() => {
-    const loader = loaderRef.current;
-    if (!loader) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (first.isIntersecting && hasMore && !isLoading) {
-          fetchMore();
+    fetch(`/api/projects?page=${safePage}`, { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch projects");
         }
-      },
-      { threshold: 0.1, rootMargin: "100px" }
-    );
+        return response.json();
+      })
+      .then((data: ProjectsPageResult) => {
+        if (data.rateLimited) {
+          setError("Rate limited. Please try again later.");
+          setProjects([]);
+          return;
+        }
 
-    observer.observe(loader);
+        const filteredProjects = data.projects.filter(
+          (project) => !pinnedIds.has(project.id)
+        );
+
+        setProjects(filteredProjects);
+        setPagination(data);
+      })
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        setError("Failed to load projects");
+        console.error("Error fetching projects:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
 
     return () => {
-      observer.unobserve(loader);
+      controller.abort();
     };
-  }, [fetchMore, hasMore, isLoading]);
+  }, [safePage, pinnedIds]);
 
+
+  const totalPages = pagination?.totalPages ?? Math.max(1, Math.ceil(totalNonPinned / 10));
+  const hasPrev = pagination?.hasPrev ?? safePage > 1;
+  const hasNext = pagination?.hasNext ?? safePage < totalPages;
   const totalCount = pinnedProjects.length + projects.length;
+
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > totalPages) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextPage === 1) {
+      params.delete("page");
+    } else {
+      params.set("page", String(nextPage));
+    }
+    const queryString = params.toString();
+    router.push(queryString ? `/projects?${queryString}` : "/projects");
+  };
 
   return (
     <>
@@ -123,7 +141,7 @@ export function ProjectGrid({
         )}
 
         {/* All Projects Section */}
-        {projects.length > 0 && (
+        {(projects.length > 0 || isLoading) && (
           <section aria-labelledby="all-projects-heading">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -137,62 +155,88 @@ export function ProjectGrid({
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
                 {totalCount} repositories loaded
-                {hasMore && " (scroll for more)"}
               </p>
             </motion.div>
 
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-6" role="list">
-              {projects.map((project, index) => (
-                <li key={project.id}>
-                  <ProjectCard
-                    project={project}
-                    index={index + pinnedProjects.length}
-                    onExpand={setSelectedProject}
-                  />
-                </li>
-              ))}
-            </ul>
+            <div className="relative">
+              <ul className="grid grid-cols-1 md:grid-cols-2 gap-6" role="list">
+                {projects.map((project, index) => (
+                  <li key={project.id}>
+                    <ProjectCard
+                      project={project}
+                      index={index + pinnedProjects.length}
+                      onExpand={setSelectedProject}
+                    />
+                  </li>
+                ))}
+              </ul>
+
+              {isLoading && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-background/70 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-muted-foreground" role="status">
+                    <svg
+                      className="w-5 h-5 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span>Loading projects...</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {(pagination || totalNonPinned > 0) && (
+              <div className="mt-8 flex items-center justify-center gap-4 text-sm">
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(safePage - 1)}
+                  disabled={!hasPrev || isLoading}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-transparent text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Prev
+                </button>
+
+                <span className="text-muted-foreground">
+                  Page {safePage} of {totalPages}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => handlePageChange(safePage + 1)}
+                  disabled={!hasNext || isLoading}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-full border border-transparent text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:pointer-events-none transition-colors"
+                >
+                  Next
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </section>
         )}
 
-        {/* Loading indicator / Intersection observer target */}
-        <div ref={loaderRef} className="py-8 flex justify-center" aria-live="polite">
-          {isLoading && (
-            <div className="flex items-center gap-2 text-muted-foreground" role="status">
-              <svg
-                className="w-5 h-5 animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              <span>Loading more projects...</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="text-sm text-red-500" role="alert">{error}</div>
-          )}
-
-          {!hasMore && projects.length > 0 && !isLoading && (
-            <p className="text-sm text-muted-foreground">
-              All projects loaded
-            </p>
-          )}
-        </div>
+        {error && (
+          <div className="text-sm text-red-500" role="alert">{error}</div>
+        )}
 
         {/* Empty state */}
         {pinnedProjects.length === 0 && projects.length === 0 && !isLoading && (

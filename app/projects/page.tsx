@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 export const revalidate = 21600;
 
 export default async function ProjectsPage() {
-  const { pinned, initial, totalRemaining } = await getInitialProjects();
+  const { pinned, totalNonPinned } = await getInitialProjects();
 
   return (
-    <Container className="py-6">
+    <Container className="pt-16 md:pt-24 pb-6">
       <div className="mb-4">
         <h1 className="text-3xl font-bold mb-1">Projects</h1>
         <p className="text-muted-foreground">
@@ -25,8 +25,7 @@ export default async function ProjectsPage() {
 
       <ProjectGrid
         pinnedProjects={pinned}
-        initialProjects={initial}
-        totalRemaining={totalRemaining}
+        totalNonPinned={totalNonPinned}
       />
     </Container>
   );
