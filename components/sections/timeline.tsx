@@ -4,6 +4,20 @@ import { motion } from "framer-motion";
 import { formatDateRange } from "@/lib/utils";
 
 // ============================================
+// Timeline - wrapper with single continuous shimmer line
+// ============================================
+
+export function Timeline({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      {/* Single continuous timeline line with shimmer */}
+      <div className="absolute left-0 top-2 bottom-0 w-px timeline-line-shimmer" />
+      {children}
+    </div>
+  );
+}
+
+// ============================================
 // TimelineEntry - work experience
 // ============================================
 
@@ -36,9 +50,6 @@ export function TimelineEntry({
       transition={{ duration: 0.5, delay: index * 0.15 }}
       className="relative pl-8 pb-6 last:pb-0"
     >
-      {/* Timeline line with shimmer */}
-      <div className="absolute left-0 top-2 bottom-0 w-px timeline-line-shimmer" />
-
       {/* Timeline dot - springs in */}
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
@@ -137,9 +148,6 @@ export function EducationEntry({
       transition={{ duration: 0.5, delay: index * 0.15 }}
       className="relative pl-8 pb-4 last:pb-0"
     >
-      {/* Timeline line with shimmer */}
-      <div className="absolute left-0 top-2 bottom-0 w-px timeline-line-shimmer" />
-
       {/* Timeline dot - springs in */}
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
