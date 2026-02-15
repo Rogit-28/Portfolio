@@ -106,7 +106,7 @@ export function ProjectGrid({
     <>
       <div className="space-y-12">
         {/* Pinned/Featured Section */}
-        {pinnedProjects.length > 0 && (
+        {pinnedProjects.length > 0 && safePage === 1 && (
           <section aria-labelledby="pinned-heading">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
