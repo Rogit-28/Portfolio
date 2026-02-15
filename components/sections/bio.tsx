@@ -65,7 +65,7 @@ export function Bio() {
         {/* Intro line */}
         <p className="text-muted-foreground leading-relaxed text-lg text-justify">
           {highlightText(
-            "Hi, I'm Rogit — a final-year Computer Science student at SRM University, Chennai passionate about building robust systems and solving complex problems with data.",
+            "Hi, I'm Rogit - a final-year Computer Science student at SRM University, Chennai passionate about building robust systems and solving complex problems with data.",
             highlightKeywords
           )}
         </p>
