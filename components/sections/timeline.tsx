@@ -14,10 +14,24 @@ interface ScrollTimelineProps {
 
 export function ScrollTimeline({ children }: ScrollTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  // Only start animating after the user has actually scrolled
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.scrollY > 50) {
+        setHasScrolled(true);
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start 80%", "end 60%"],
+    offset: ["start 40%", "end 70%"],
   });
 
   const smoothProgress = useSpring(scrollYProgress, {
@@ -33,11 +47,13 @@ export function ScrollTimeline({ children }: ScrollTimelineProps) {
       {/* Background track line */}
       <div className="absolute left-0 top-2 bottom-0 w-px bg-border" />
 
-      {/* Scroll-progress fill line */}
-      <motion.div
-        className="absolute left-0 top-2 bottom-0 w-px bg-accent origin-top"
-        style={{ scaleY }}
-      />
+      {/* Scroll-progress fill line - only visible after user scrolls */}
+      {hasScrolled && (
+        <motion.div
+          className="absolute left-0 top-2 bottom-0 w-px bg-accent origin-top"
+          style={{ scaleY }}
+        />
+      )}
 
       {children}
     </div>
@@ -51,27 +67,42 @@ export function ScrollTimeline({ children }: ScrollTimelineProps) {
 function useEntryActive(threshold = 0.4) {
   const ref = useRef<HTMLDivElement>(null);
   const [isActive, setIsActive] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  // Gate: require user to have scrolled before activating
+  useEffect(() => {
+    const onScroll = () => {
+      if (window.scrollY > 50) {
+        setHasScrolled(true);
+        window.removeEventListener("scroll", onScroll);
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
+    if (!hasScrolled) return;
+
     const el = ref.current;
     if (!el) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Activate when the entry crosses the threshold going down
         if (entry.isIntersecting) {
           setIsActive(true);
         }
       },
       {
         threshold,
-        rootMargin: "-20% 0px -40% 0px",
+        rootMargin: "-30% 0px -50% 0px",
       }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [threshold]);
+  }, [threshold, hasScrolled]);
 
   return { ref, isActive };
 }
@@ -130,7 +161,7 @@ export function TimelineEntry({
       <div
         className={`space-y-2 rounded-lg px-4 py-3 -ml-1 transition-all duration-500 ${
           isActive
-            ? "bg-accent/5 border-l-2 border-accent/20"
+            ? "border-l-2 border-accent/20"
             : "border-l-2 border-transparent"
         }`}
       >
@@ -239,7 +270,7 @@ export function EducationEntry({
       <div
         className={`space-y-1 rounded-lg px-4 py-3 -ml-1 transition-all duration-500 ${
           isActive
-            ? "bg-accent/5 border-l-2 border-accent/20"
+            ? "border-l-2 border-accent/20"
             : "border-l-2 border-transparent"
         }`}
       >
