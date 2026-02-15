@@ -1,36 +1,25 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio
 
-## Getting Started
+My portfolio site. Yes, I made a whole website instead of just using LinkedIn like a normal person.
 
-First, run the development server:
+Supercharged with Claude.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What's in here
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Projects pulled live from GitHub - so I never have to update it manually, because I won't
+- Pinned repos get the spotlight on page 1. The rest fight for attention on page 2+
+- Experience timeline (fancy way of saying "places that let me write code")
+- Blog integration via Substack (for when I have opinions)
+- Particle backgrounds and animated avatars, because static pages are for resumes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Next.js 16 · TypeScript · Tailwind CSS · Framer Motion · GitHub API
 
-## Learn More
+## Why
 
-To learn more about Next.js, take a look at the following resources:
+Because a PDF resume can only do so much, and I needed something to show my parents when they ask what I do all day.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built by Rogit. Supercharged with Claude. Mass-produced by caffeine.
