@@ -109,10 +109,10 @@ export function ProjectGrid({
         {pinnedProjects.length > 0 && safePage === 1 && (
           <section aria-labelledby="pinned-heading">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.25 }}
               className="flex items-center gap-2 mb-6"
             >
               <svg
@@ -144,10 +144,10 @@ export function ProjectGrid({
         {(projects.length > 0 || isLoading) && (
           <section aria-labelledby="all-projects-heading">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.25 }}
               className="mb-6"
             >
               <h2 id="all-projects-heading" className="text-xl font-semibold">
@@ -164,7 +164,7 @@ export function ProjectGrid({
                   <li key={project.id}>
                     <ProjectCard
                       project={project}
-                      index={index + pinnedProjects.length}
+                      index={index}
                       onExpand={setSelectedProject}
                     />
                   </li>

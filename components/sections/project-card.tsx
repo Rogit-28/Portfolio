@@ -99,7 +99,7 @@ export function ProjectCard({ project, index, onExpand }: ProjectCardProps) {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.04, 0.2) }}
       className="group relative"
     >
       <div
