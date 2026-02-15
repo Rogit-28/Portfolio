@@ -15,7 +15,9 @@ export default function Home() {
         <section id="about" className="scroll-mt-20">
           <Bio />
         </section>
+        <hr className="section-divider" />
         <Skills />
+        <hr className="section-divider" />
         <Research />
       </Container>
     </>

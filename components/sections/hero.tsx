@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
+import { FlipAvatar } from "@/components/ui/flip-avatar";
 import siteData from "@/data/site.json";
 
 // Dynamically import particles (client-only)
@@ -30,16 +31,13 @@ export function Hero() {
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto space-y-6">
-        {/* Avatar with initials */}
+        {/* Avatar - flips to 3D on hover/click */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-accent/10 border-2 border-accent/30 flex items-center justify-center"
         >
-          <span className="text-4xl md:text-5xl font-bold text-accent">
-            {initials}
-          </span>
+          <FlipAvatar initials={initials} />
         </motion.div>
 
         {/* Name */}
@@ -47,7 +45,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-4xl md:text-6xl font-bold tracking-tight"
+          className="text-4xl md:text-6xl font-bold tracking-tight shimmer-text"
         >
           {siteData.name.toUpperCase()}
         </motion.h1>
