@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { cn } from "@/lib/utils";
 
@@ -22,15 +22,32 @@ interface FlipAvatarProps {
 
 export function FlipAvatar({ initials, className }: FlipAvatarProps) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // On mobile, don't include the 3D avatar to save performance
+  // Show a tooltip on hover to indicate the flip feature (desktop only)
   return (
     <div
-      className={cn("flip-card cursor-pointer", className)}
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
+      className={cn(
+        "flip-card cursor-pointer relative",
+        isFlipped && "flipped",
+        !isMobile && "group",
+        className
+      )}
+      onMouseEnter={() => !isMobile && setIsFlipped(true)}
+      onMouseLeave={() => !isMobile && setIsFlipped(false)}
       onClick={() => setIsFlipped(!isFlipped)}
       role="button"
-      aria-label="Flip avatar to see 3D version"
+      aria-label={isMobile ? "View avatar" : "Flip avatar to see 3D version"}
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -38,6 +55,13 @@ export function FlipAvatar({ initials, className }: FlipAvatarProps) {
         }
       }}
     >
+      {/* Tooltip - only visible on desktop hover */}
+      {!isMobile && !isFlipped && (
+        <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 text-xs bg-foreground text-background rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Hover to see 3D
+        </div>
+      )}
+      
       <div
         className={cn(
           "flip-card-inner w-40 h-40 md:w-48 md:h-48 transition-transform duration-700",
@@ -51,10 +75,12 @@ export function FlipAvatar({ initials, className }: FlipAvatarProps) {
           </span>
         </div>
 
-        {/* Back - 3D Avatar */}
-        <div className="flip-card-back absolute inset-0 rounded-full overflow-hidden backface-hidden rotate-y-180">
-          <Avatar3D />
-        </div>
+        {/* Back - 3D Avatar - only rendered on desktop */}
+        {!isMobile && (
+          <div className="flip-card-back absolute inset-0 rounded-full overflow-hidden backface-hidden rotate-y-180">
+            <Avatar3D />
+          </div>
+        )}
       </div>
     </div>
   );

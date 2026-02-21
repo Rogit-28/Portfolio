@@ -50,6 +50,16 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      {
+        // Preconnect to GitHub API domains for faster load times
+        source: "/:path*",
+        headers: [
+          {
+            key: "Link",
+            value: "<https://api.github.com>; rel=preconnect, <https://raw.githubusercontent.com>; rel=preconnect, <https://github.com>; rel=preconnect",
+          },
+        ],
+      },
     ];
   },
 };

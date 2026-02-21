@@ -3,9 +3,15 @@
   "title": "B.Tech Computer Science & Engineering",
   "institution": "SRM Institute of Science and Technology, Ramapuram",
   "location": "Chennai, India",
+  "tagline": ["Data Analytics", "Business Intelligence", "AI/ML"],
   "bio": {
     "short": "Computer Science student focused on Data Engineering, AI/ML, and Business Analytics.",
+    "intro": "Hi, I'm Rogit - a final-year Computer Science student at SRM University, Chennai passionate about building robust systems and solving complex problems with data.",
     "long": "To me, business challenges are a lot like minesweeper. With the right data, uncertainty becomes navigable - every insight reveals the next strategic move. That's what draws me to Business Analytics: the ability to transform raw data into a competitive edge.\n\nMy internships at Kalvium, Acetech Group, and Profisolutions gave me a unique vantage point. I've built the technical frameworks - data pipelines, ML models, automation systems - and I've sat on the other side, using those same tools to shape business strategy. This dual experience helps me speak both languages fluently: translating complex technical work into actionable business outcomes.\n\nI'm actively seeking backend engineering, data science, or AI/ML roles where I can build impactful systems and keep learning."
+  },
+  "personalFacts": {
+    "currentlyLearning": ["Generative AI", "System Design", "LLM Integration"],
+    "funFacts": ["I've debugged for 6 hours before realizing I was on the wrong branch", "I prefer spaces over tabs (sorry not sorry)", "I break for coffee code comments"]
   },
   "email": "rogitsudharsan81@gmail.com",
   "social": {

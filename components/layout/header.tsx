@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { ThemeToggle } from "../ui/theme-toggle";
+import { TerminalPalette } from "../ui/terminal-palette";
+import { Icon } from "../ui/icon";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -125,9 +127,7 @@ export function Header() {
             onClick={() => goToMobileIndex(currentMobileIndex - 1)}
             aria-label="Previous page"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <Icon name="arrow-left" className="w-4 h-4" />
           </button>
 
           <Link
@@ -144,16 +144,14 @@ export function Header() {
             onClick={() => goToMobileIndex(currentMobileIndex + 1)}
             aria-label="Next page"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+            <Icon name="arrow-right" className="w-4 h-4" />
           </button>
         </motion.nav>
       </motion.header>
 
-      {/* Floating theme toggle - right corner */}
+      {/* Floating theme & terminal toggles - right corner */}
       <motion.div 
-        className="fixed top-4 right-4 z-50"
+        className="fixed top-4 right-4 z-50 flex items-center gap-2"
         initial={{ y: 0, opacity: 1 }}
         animate={{ 
           y: hidden ? -80 : 0,
@@ -164,6 +162,7 @@ export function Header() {
           ease: [0.32, 0.72, 0, 1],
         }}
       >
+        <TerminalPalette />
         <ThemeToggle />
       </motion.div>
     </>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { EasterEggs } from "@/components/ui/easter-eggs";
 import siteData from "@/data/site.json";
 
 const geistSans = Geist({
@@ -67,6 +68,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange={false}
         >
+          <EasterEggs />
           {/* Skip to main content link for accessibility */}
           <a
             href="#main-content"
