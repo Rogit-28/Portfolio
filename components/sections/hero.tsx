@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
@@ -34,28 +34,22 @@ export function Hero() {
       <ParticlesBackground onWarpComplete={() => setIsWarping(false)} />
 
       {/* Main content */}
-      <AnimatePresence>
-        {!isWarping && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto space-y-6"
-          >
+      {!isWarping && (
+        <div className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto space-y-6">
             {/* Avatar - flips to 3D on hover/click */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
             >
               <FlipAvatar initials={initials} />
             </motion.div>
 
             {/* Name */}
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-6xl font-bold tracking-tight shimmer-text"
             >
               {siteData.name.toUpperCase()}
@@ -63,9 +57,9 @@ export function Hero() {
 
             {/* Tagline */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              transition={{ duration: 0.5, delay: 0.18 }}
               className="text-lg md:text-xl text-muted-foreground"
             >
               {siteData.tagline ? (
@@ -74,7 +68,7 @@ export function Hero() {
                     key={idx}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3, delay: 0.45 + idx * 0.1 }}
+                    transition={{ duration: 0.3, delay: 0.22 + idx * 0.08 }}
                   >
                     {item}
                     {idx < siteData.tagline!.length - 1 && " • "}
@@ -87,9 +81,9 @@ export function Hero() {
 
             {/* Location */}
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
+              transition={{ duration: 0.5, delay: 0.26 }}
               className="text-sm text-muted-foreground flex items-center gap-1.5"
             >
               <Icon name="location" className="w-4 h-4" />
@@ -98,9 +92,9 @@ export function Hero() {
 
             {/* Interest Tags */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
+              transition={{ duration: 0.5, delay: 0.32 }}
               className="flex flex-wrap justify-center gap-2"
             >
               {siteData.skills.interests.slice(0, 4).map((interest) => (
@@ -112,9 +106,9 @@ export function Hero() {
 
             {/* CTA Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
+              transition={{ duration: 0.5, delay: 0.38 }}
               className="flex flex-wrap justify-center gap-3 pt-4"
             >
               <Button href={`mailto:${siteData.email}`}>
@@ -138,16 +132,15 @@ export function Hero() {
                 Blog
               </Button>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
 
       {/* Scroll indicator */}
       {!isWarping && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
+          transition={{ delay: 0.8 }}
           className="absolute bottom-8 left-1/2 -translate-x-1/2"
         >
           <button

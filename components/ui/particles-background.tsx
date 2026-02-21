@@ -323,7 +323,7 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
       setHyperspaceActive(false);
       setShowAmbient(true);
       onWarpComplete?.();
-    }, 100);
+    }, 300);
   }, [onWarpComplete]);
 
   const ambientOptions: ISourceOptions = useMemo(() => ({
