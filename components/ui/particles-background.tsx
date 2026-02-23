@@ -252,8 +252,7 @@ function HyperspaceCanvas({ onComplete }: { onComplete: () => void }) {
 
 export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () => void }) {
   const [particlesInit, setParticlesInit] = useState(false);
-  const [hasInteracted, setHasInteracted] = useState(false);
-  const [hyperspaceActive, setHyperspaceActive] = useState(false);
+  const [hyperspaceActive, setHyperspaceActive] = useState(true);
   const [showAmbient, setShowAmbient] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -271,39 +270,14 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const initEngine = useCallback(() => {
-    if (hasInteracted) return;
-    setHasInteracted(true);
-    setHyperspaceActive(true);
-
+  // Initialize tsparticles engine on mount so ambient is ready when hyperspace ends
+  useEffect(() => {
     initParticlesEngine(async (engine) => {
       await loadSlim(engine);
     }).then(() => {
       setParticlesInit(true);
     });
-  }, [hasInteracted]);
-
-  useEffect(() => {
-    const handleInteraction = () => initEngine();
-
-    const events = [
-      ["mousemove", handleInteraction],
-      ["click", handleInteraction],
-      ["touchstart", handleInteraction],
-      ["scroll", handleInteraction],
-      ["keydown", handleInteraction],
-    ] as const;
-
-    events.forEach(([eventName, handler]) => {
-      window.addEventListener(eventName, handler, { once: true });
-    });
-
-    return () => {
-      events.forEach(([eventName, handler]) => {
-        window.removeEventListener(eventName, handler as EventListener);
-      });
-    };
-  }, [initEngine]);
+  }, []);
 
   const handleHyperspaceComplete = useCallback(() => {
     setHyperspaceActive(false);
