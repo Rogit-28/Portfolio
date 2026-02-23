@@ -82,7 +82,7 @@ export function Bio() {
         ))}
 
         {/* Personal Facts Section */}
-        {(personalFacts.currentlyLearning || personalFacts.funFacts) && (
+        {personalFacts.currentlyLearning && Array.isArray(personalFacts.currentlyLearning) && personalFacts.currentlyLearning.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -90,35 +90,19 @@ export function Bio() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-8 pt-6 border-t border-border"
           >
-            {personalFacts.currentlyLearning && Array.isArray(personalFacts.currentlyLearning) && personalFacts.currentlyLearning.length > 0 && (
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name="arrow-down" className="w-4 h-4" />
-                  <h3 className="font-semibold text-foreground">Currently Learning</h3>
-                </div>
-                <div className="flex flex-wrap gap-2 ml-6">
-                  {personalFacts.currentlyLearning.map((item: string, idx: number) => (
-                    <Tag key={idx} variant="accent">
-                      {item}
-                    </Tag>
-                  ))}
-                </div>
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Icon name="arrow-down" className="w-4 h-4" />
+                <h3 className="font-semibold text-foreground">Currently Learning</h3>
               </div>
-            )}
-
-            {personalFacts.funFacts && Array.isArray(personalFacts.funFacts) && personalFacts.funFacts.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon name="arrow-down" className="w-4 h-4" />
-                  <h3 className="font-semibold text-foreground">Fun Facts</h3>
-                </div>
-                <ul className="list-disc list-inside space-y-2 ml-6 text-muted-foreground">
-                  {personalFacts.funFacts.map((fact: string, idx: number) => (
-                    <li key={idx}>{fact}</li>
-                  ))}
-                </ul>
+              <div className="flex flex-wrap gap-2 ml-6">
+                {personalFacts.currentlyLearning.map((item: string, idx: number) => (
+                  <Tag key={idx} variant="accent">
+                    {item}
+                  </Tag>
+                ))}
               </div>
-            )}
+            </div>
           </motion.div>
         )}
       </div>
