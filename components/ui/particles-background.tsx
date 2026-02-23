@@ -226,18 +226,6 @@ function HyperspaceCanvas({ onComplete }: { onComplete: () => void }) {
         }
       }
 
-      // Radial vignette during streaks (naturally fades with streakIntensity)
-      if (streakIntensity > 0.1) {
-        const vigGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.6);
-        const centerGlow = streakIntensity * 0.06 * (1 - fadeOut);
-        vigGrad.addColorStop(0, `rgba(220, 38, 38, ${centerGlow})`);
-        vigGrad.addColorStop(0.3, `rgba(180, 20, 20, ${centerGlow * 0.4})`);
-        vigGrad.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-        vigGrad.addColorStop(1, `rgba(0, 0, 0, ${streakIntensity * 0.35 * (1 - fadeOut)})`);
-        ctx.fillStyle = vigGrad;
-        ctx.fillRect(0, 0, w, h);
-      }
-
       animFrameRef.current = requestAnimationFrame(animate);
     };
 
