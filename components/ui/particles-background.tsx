@@ -181,21 +181,18 @@ function HyperspaceCanvas({ onComplete }: { onComplete: () => void }) {
         // Skip drawing if fully transparent
         if (alpha < 0.01) continue;
 
-        // Color
-        const redShift = streakIntensity * 0.7;
-        const isRedStar = star.hue > 0.4;
+        // Color - gradual white-to-crimson shift through Phase 3+4
+        // crimsonT: 0 at start of streaking, ~1 by end of Phase 3, stays 1 in Phase 4
+        // Each star shifts at slightly different rate based on hue for visual variety
+        const crimsonT = Math.min(streakIntensity + fadeOut, 1);
+        // Per-star variation: some stars shift earlier (hue acts as offset)
+        const starShift = Math.min(crimsonT * (0.7 + star.hue * 0.6), 1);
 
+        // Lerp from white (255,255,255) toward crimson (220,38,38)
         let r: number, g: number, b: number;
-        if (isRedStar && streakIntensity > 0.05) {
-          const intensity = redShift * star.hue;
-          r = Math.floor(220 + (35 * (1 - intensity)));
-          g = Math.floor(255 - intensity * 217);
-          b = Math.floor(255 - intensity * 217);
-        } else {
-          r = 255;
-          g = Math.floor(255 - redShift * 30);
-          b = Math.floor(255 - redShift * 50);
-        }
+        r = Math.floor(255 + (220 - 255) * starShift); // 255 -> 220
+        g = Math.floor(255 + (38 - 255) * starShift);  // 255 -> 38
+        b = Math.floor(255 + (38 - 255) * starShift);  // 255 -> 38
 
         if (streakIntensity > 0.05) {
           const streakLen = Math.sqrt((sx - spx) ** 2 + (sy - spy) ** 2);
@@ -210,7 +207,11 @@ function HyperspaceCanvas({ onComplete }: { onComplete: () => void }) {
 
             ctx.beginPath();
             ctx.arc(sx, sy, size * 0.6, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(255, 240, 235, ${alpha})`;
+            // Head glow shifts from warm white toward bright crimson
+            const headR = Math.floor(255);
+            const headG = Math.floor(240 + (60 - 240) * starShift); // 240 -> 60
+            const headB = Math.floor(235 + (50 - 235) * starShift); // 235 -> 50
+            ctx.fillStyle = `rgba(${headR}, ${headG}, ${headB}, ${alpha})`;
             ctx.fill();
           }
         } else {
@@ -313,12 +314,12 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
     fpsLimit: 60,
     particles: {
       number: {
-        value: 50,
+        value: 75,
         density: { enable: true, width: 1920, height: 1080 },
       },
       color: { value: "#DC2626" },
-      opacity: { value: { min: 0.2, max: 0.5 } },
-      size: { value: { min: 1, max: 2.5 } },
+      opacity: { value: { min: 0.35, max: 0.7 } },
+      size: { value: { min: 1.2, max: 3 } },
       shape: { type: "circle" },
       move: {
         enable: true,
@@ -331,14 +332,14 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
       links: {
         enable: true,
         color: "#DC2626",
-        opacity: 0.15,
+        opacity: 0.22,
         distance: 120,
         width: 1,
       },
     },
     interactivity: {
       events: { onHover: { enable: true, mode: "grab" } },
-      modes: { grab: { distance: 150, links: { opacity: 0.3 } } },
+      modes: { grab: { distance: 150, links: { opacity: 0.45 } } },
     },
     detectRetina: true,
   }), []);
