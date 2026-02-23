@@ -267,6 +267,21 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
   const [hasInteracted, setHasInteracted] = useState(false);
   const [hyperspaceActive, setHyperspaceActive] = useState(false);
   const [showAmbient, setShowAmbient] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Scroll-linked fade: particles become transparent as user scrolls toward About
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!wrapperRef.current) return;
+      const vh = window.innerHeight;
+      // Fade from full opacity at top to 0 at 80% scroll of viewport
+      const scrollFraction = Math.min(window.scrollY / (vh * 0.8), 1);
+      wrapperRef.current.style.opacity = String(1 - scrollFraction);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const initEngine = useCallback(() => {
     if (hasInteracted) return;
@@ -345,7 +360,7 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
   }), []);
 
   return (
-    <>
+    <div ref={wrapperRef} className="absolute inset-0 w-full h-full">
       {hyperspaceActive && (
         <HyperspaceCanvas onComplete={handleHyperspaceComplete} />
       )}
@@ -370,6 +385,6 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
           100% { opacity: 1; }
         }
       `}</style>
-    </>
+    </div>
   );
 }
