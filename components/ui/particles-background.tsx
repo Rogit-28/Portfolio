@@ -13,9 +13,9 @@ import type { ISourceOptions } from "@tsparticles/engine";
 //   Phase 1 (0-400ms):       Static starfield with twinkle
 //   Phase 2 (400-650ms):     Stars begin stretching outward
 //   Phase 3 (650-2200ms):    Full hyperspace streaking
-//   Phase 4 (2200-3200ms):   Deceleration - streaks shorten into dots
-//   Phase 5 (3200-4800ms):   Firefly drift - gentle crimson dots float
-//                            Canvas opacity fades out, tsparticles underneath
+//   Phase 4 (2200-3400ms):   Deceleration - streaks shorten, dim, and dissolve
+//                            Canvas bg fades from black to transparent
+//                            At end: canvas removed, tsparticles fades in
 // ============================================
 
 interface Star {
@@ -26,10 +26,7 @@ interface Star {
   prevY: number;
   speed: number;
   brightness: number;
-  hue: number; // 0 = pure white, 1 = full red
-  // Firefly drift direction (assigned during deceleration)
-  driftAngle: number;
-  driftSpeed: number;
+  hue: number;
 }
 
 function createStars(count: number): Star[] {
@@ -48,26 +45,17 @@ function createStars(count: number): Star[] {
       speed: 0.3 + Math.random() * 0.7,
       brightness: 0.4 + Math.random() * 0.6,
       hue: Math.random(),
-      driftAngle: Math.random() * Math.PI * 2,
-      driftSpeed: 0.0002 + Math.random() * 0.0004,
     });
   }
   return stars;
 }
 
-function HyperspaceCanvas({
-  onComplete,
-  onFadeStart,
-}: {
-  onComplete: () => void;
-  onFadeStart: () => void;
-}) {
+function HyperspaceCanvas({ onComplete }: { onComplete: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number>(0);
   const starsRef = useRef<Star[]>(createStars(350));
   const startTimeRef = useRef<number>(0);
   const completedRef = useRef(false);
-  const fadeStartedRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -91,8 +79,7 @@ function HyperspaceCanvas({
     const STATIC_END = 400;
     const RAMP_END = 650;
     const STREAK_END = 2200;
-    const DECEL_END = 3200;
-    const FIREFLY_END = 4800;
+    const DECEL_END = 3400;
 
     const animate = (now: number) => {
       const elapsed = now - startTimeRef.current;
@@ -105,57 +92,37 @@ function HyperspaceCanvas({
       let clearAlpha: number;
       let streakIntensity = 0;
       let speedFactor = 0;
-      let decelT = 0; // 0 during warp, ramps 0->1 during deceleration
-      let fireflyT = 0; // 0->1 during firefly phase
+      let fadeOut = 0; // 0->1 during decel, controls star opacity dissolve
 
       if (elapsed < STATIC_END) {
-        // Phase 1: static starfield
         clearAlpha = 1;
-        streakIntensity = 0;
-        speedFactor = 0;
       } else if (elapsed < RAMP_END) {
-        // Phase 2: acceleration ramp
         const t = (elapsed - STATIC_END) / (RAMP_END - STATIC_END);
         clearAlpha = 1 - t * 0.65;
         streakIntensity = t * t * 0.3;
         speedFactor = t * t * 0.01;
       } else if (elapsed < STREAK_END) {
-        // Phase 3: full hyperspace
         const t = (elapsed - RAMP_END) / (STREAK_END - RAMP_END);
         clearAlpha = 0.35 - t * 0.15;
         streakIntensity = 0.3 + t * 0.7;
         speedFactor = 0.01 + t * 0.04;
       } else if (elapsed < DECEL_END) {
-        // Phase 4: deceleration - streaks shorten, stars become dots
-        decelT = (elapsed - STREAK_END) / (DECEL_END - STREAK_END);
-        const eased = decelT * decelT; // ease-in for smooth braking feel
-        clearAlpha = 0.2 + eased * 0.8; // 0.2 -> 1.0 (motion blur clears out)
-        streakIntensity = 1 - eased; // 1 -> 0
-        speedFactor = 0.05 * (1 - eased * eased); // braking curve
-      } else if (elapsed < FIREFLY_END) {
-        // Phase 5: firefly drift
-        fireflyT = (elapsed - DECEL_END) / (FIREFLY_END - DECEL_END);
-        clearAlpha = 1;
-        streakIntensity = 0;
-        speedFactor = 0;
-        decelT = 1;
+        // Deceleration: streaks shorten, stars fade out entirely
+        const t = (elapsed - STREAK_END) / (DECEL_END - STREAK_END);
+        const eased = t * t;
+        clearAlpha = 0.2 + eased * 0.8;
+        streakIntensity = 1 - eased;
+        speedFactor = 0.05 * (1 - eased * eased);
+        fadeOut = eased; // stars dissolve away
       } else {
         // Done
         clearAlpha = 1;
         streakIntensity = 0;
         speedFactor = 0;
-        decelT = 1;
-        fireflyT = 1;
+        fadeOut = 1;
       }
 
-      // Fire onComplete at start of firefly phase so hero content starts revealing
-      if (elapsed >= DECEL_END && !fadeStartedRef.current) {
-        fadeStartedRef.current = true;
-        onFadeStart();
-      }
-
-      // Canvas fully done
-      if (elapsed >= FIREFLY_END) {
+      if (elapsed >= DECEL_END) {
         if (!completedRef.current) {
           completedRef.current = true;
           onComplete();
@@ -163,8 +130,10 @@ function HyperspaceCanvas({
         return;
       }
 
-      // Clear canvas
-      ctx.fillStyle = `rgba(0, 0, 0, ${clearAlpha})`;
+      // Clear canvas - during decel, transition from black to transparent
+      // by reducing the black fill opacity so page bg bleeds through
+      const bgOpacity = 1 - fadeOut * 0.7; // 1.0 -> 0.3
+      ctx.fillStyle = `rgba(0, 0, 0, ${clearAlpha * bgOpacity})`;
       ctx.fillRect(0, 0, w, h);
 
       const stars = starsRef.current;
@@ -174,14 +143,7 @@ function HyperspaceCanvas({
         star.prevX = star.x;
         star.prevY = star.y;
 
-        if (fireflyT > 0) {
-          // Firefly drift: gentle random wandering
-          // Slowly rotate drift direction for organic movement
-          star.driftAngle += (Math.sin(elapsed * 0.001 + i) * 0.02);
-          star.x += Math.cos(star.driftAngle) * star.driftSpeed;
-          star.y += Math.sin(star.driftAngle) * star.driftSpeed;
-        } else if (speedFactor > 0) {
-          // Warp/decel: radial outward movement
+        if (speedFactor > 0) {
           const distFromCenter = Math.sqrt(star.x * star.x + star.y * star.y);
           const angle = Math.atan2(star.y, star.x);
           const moveAmount = speedFactor * star.speed * (0.5 + distFromCenter * 2) * (0.5 + star.z);
@@ -190,27 +152,18 @@ function HyperspaceCanvas({
           star.z = Math.min(star.z + speedFactor * 0.3, 1);
         }
 
-        // Respawn at random position if out of bounds
+        // Respawn at center if out of bounds
         if (Math.abs(star.x) > 1.2 || Math.abs(star.y) > 1.2) {
-          if (decelT > 0.5 || fireflyT > 0) {
-            // During decel/firefly: respawn scattered across viewport
-            star.x = (Math.random() - 0.5) * 1.8;
-            star.y = (Math.random() - 0.5) * 1.8;
-          } else {
-            // During warp: respawn at center
-            const angle = Math.random() * Math.PI * 2;
-            const radius = 0.01 + Math.random() * 0.08;
-            star.x = Math.cos(angle) * radius;
-            star.y = Math.sin(angle) * radius;
-          }
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 0.01 + Math.random() * 0.08;
+          star.x = Math.cos(angle) * radius;
+          star.y = Math.sin(angle) * radius;
           star.prevX = star.x;
           star.prevY = star.y;
           star.z = Math.random() * 0.3;
           star.speed = 0.3 + Math.random() * 0.7;
           star.brightness = 0.4 + Math.random() * 0.6;
           star.hue = Math.random();
-          star.driftAngle = Math.random() * Math.PI * 2;
-          star.driftSpeed = 0.0002 + Math.random() * 0.0004;
         }
 
         // Screen coordinates
@@ -220,32 +173,20 @@ function HyperspaceCanvas({
         const spx = cx + star.prevX * scale;
         const spy = cy + star.prevY * scale;
 
-        // During decel/firefly, transition color toward crimson #DC2626
-        // and match ambient particle appearance (small, dim, red)
-        const toFirefly = Math.max(decelT, fireflyT > 0 ? 1 : 0);
+        const size = (0.5 + star.z * 2) * (1 + streakIntensity * 0.5);
+        // Fade out star opacity during deceleration
+        const baseAlpha = star.brightness * (0.6 + streakIntensity * 0.4);
+        const alpha = baseAlpha * (1 - fadeOut);
 
-        // Size: shrink from warp size to ambient size (1-2.5px)
-        const warpSize = (0.5 + star.z * 2) * (1 + streakIntensity * 0.5);
-        const fireflySize = 1 + star.brightness * 1.5; // 1-2.5px matching ambient
-        const size = warpSize + (fireflySize - warpSize) * toFirefly;
+        // Skip drawing if fully transparent
+        if (alpha < 0.01) continue;
 
-        // Opacity: transition to ambient range (0.2-0.5)
-        const warpAlpha = star.brightness * (0.6 + streakIntensity * 0.4);
-        const fireflyAlpha = 0.2 + star.brightness * 0.3; // 0.2-0.5 matching ambient
-        const alpha = warpAlpha + (fireflyAlpha - warpAlpha) * toFirefly;
-
-        // Color: transition all stars to crimson #DC2626 (220, 38, 38)
+        // Color
         const redShift = streakIntensity * 0.7;
         const isRedStar = star.hue > 0.4;
 
         let r: number, g: number, b: number;
-        if (toFirefly > 0.5) {
-          // Transitioning to firefly: lerp toward #DC2626
-          const lerp = Math.min((toFirefly - 0.5) * 2, 1); // 0->1 over second half
-          r = Math.floor(255 + (220 - 255) * lerp);
-          g = Math.floor(200 + (38 - 200) * lerp);
-          b = Math.floor(200 + (38 - 200) * lerp);
-        } else if (isRedStar && streakIntensity > 0.05) {
+        if (isRedStar && streakIntensity > 0.05) {
           const intensity = redShift * star.hue;
           r = Math.floor(220 + (35 * (1 - intensity)));
           g = Math.floor(255 - intensity * 217);
@@ -273,25 +214,25 @@ function HyperspaceCanvas({
             ctx.fill();
           }
         } else {
-          // Dot (static, decel endpoint, or firefly)
-          const twinkle = fireflyT > 0
-            ? 0.8 + 0.2 * Math.sin(elapsed * 0.003 * star.speed + i * 1.7)
-            : 0.7 + 0.3 * Math.sin(elapsed * 0.005 * star.speed + star.brightness * 10);
+          // Static dot with twinkle
+          const twinkle = 0.7 + 0.3 * Math.sin(elapsed * 0.005 * star.speed + star.brightness * 10);
+          const staticG = star.hue > 0.7 ? 200 : 255;
+          const staticB = star.hue > 0.7 ? 200 : 255;
           ctx.beginPath();
           ctx.arc(sx, sy, size * 0.7, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha * twinkle})`;
+          ctx.fillStyle = `rgba(255, ${staticG}, ${staticB}, ${alpha * twinkle})`;
           ctx.fill();
         }
       }
 
-      // Radial vignette during streaks (fades out with deceleration)
+      // Radial vignette during streaks (naturally fades with streakIntensity)
       if (streakIntensity > 0.1) {
         const vigGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * 0.6);
-        const centerGlow = streakIntensity * 0.06;
+        const centerGlow = streakIntensity * 0.06 * (1 - fadeOut);
         vigGrad.addColorStop(0, `rgba(220, 38, 38, ${centerGlow})`);
         vigGrad.addColorStop(0.3, `rgba(180, 20, 20, ${centerGlow * 0.4})`);
         vigGrad.addColorStop(0.6, "rgba(0, 0, 0, 0)");
-        vigGrad.addColorStop(1, `rgba(0, 0, 0, ${streakIntensity * 0.35})`);
+        vigGrad.addColorStop(1, `rgba(0, 0, 0, ${streakIntensity * 0.35 * (1 - fadeOut)})`);
         ctx.fillStyle = vigGrad;
         ctx.fillRect(0, 0, w, h);
       }
@@ -305,13 +246,13 @@ function HyperspaceCanvas({
       cancelAnimationFrame(animFrameRef.current);
       window.removeEventListener("resize", resize);
     };
-  }, [onComplete, onFadeStart]);
+  }, [onComplete]);
 
   return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full z-10"
-      style={{ background: "#000" }}
+      style={{ background: "transparent" }}
     />
   );
 }
@@ -325,7 +266,6 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
   const [hasInteracted, setHasInteracted] = useState(false);
   const [hyperspaceActive, setHyperspaceActive] = useState(false);
   const [showAmbient, setShowAmbient] = useState(false);
-  const [canvasFading, setCanvasFading] = useState(false);
 
   const initEngine = useCallback(() => {
     if (hasInteracted) return;
@@ -361,17 +301,11 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
     };
   }, [initEngine]);
 
-  // Called when firefly phase begins - start crossfade
-  const handleFadeStart = useCallback(() => {
-    setCanvasFading(true);
+  const handleHyperspaceComplete = useCallback(() => {
+    setHyperspaceActive(false);
     setShowAmbient(true);
     onWarpComplete?.();
   }, [onWarpComplete]);
-
-  // Called when canvas animation is fully done - remove canvas
-  const handleHyperspaceComplete = useCallback(() => {
-    setHyperspaceActive(false);
-  }, []);
 
   const ambientOptions: ISourceOptions = useMemo(() => ({
     fullScreen: false,
@@ -412,23 +346,13 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
   return (
     <>
       {hyperspaceActive && (
-        <div
-          className="absolute inset-0 w-full h-full z-10"
-          style={canvasFading ? {
-            animation: "canvasFadeOut 1.6s ease-in forwards",
-          } : undefined}
-        >
-          <HyperspaceCanvas
-            onComplete={handleHyperspaceComplete}
-            onFadeStart={handleFadeStart}
-          />
-        </div>
+        <HyperspaceCanvas onComplete={handleHyperspaceComplete} />
       )}
 
       {showAmbient && particlesInit && (
         <div
           className="absolute inset-0 w-full h-full"
-          style={{ animation: "ambientFadeIn 1.6s ease-out forwards" }}
+          style={{ animation: "ambientFadeIn 1s ease-out forwards" }}
         >
           <Particles
             id="hero-particles"
@@ -440,10 +364,6 @@ export function ParticlesBackground({ onWarpComplete }: { onWarpComplete?: () =>
       )}
 
       <style jsx global>{`
-        @keyframes canvasFadeOut {
-          0% { opacity: 1; }
-          100% { opacity: 0; }
-        }
         @keyframes ambientFadeIn {
           0% { opacity: 0; }
           100% { opacity: 1; }
