@@ -6,7 +6,15 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { FlipAvatar } from "@/components/ui/flip-avatar";
-import { Icon } from "@/components/ui/icon";
+import { 
+  FaEnvelope, 
+  FaDownload, 
+  FaLinkedin, 
+  FaGithub, 
+  FaNewspaper,
+  FaMapMarkerAlt,
+  FaArrowDown 
+} from "react-icons/fa";
 import siteData from "@/data/site.json";
 
 // Dynamically import particles (client-only)
@@ -79,14 +87,13 @@ export function Hero() {
               )}
             </motion.div>
 
-            {/* Location */}
             <motion.p
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.26 }}
               className="text-sm text-muted-foreground flex items-center gap-1.5"
             >
-              <Icon name="location" className="w-4 h-4" />
+              <FaMapMarkerAlt className="w-4 h-4" />
               {siteData.location}
             </motion.p>
 
@@ -112,23 +119,23 @@ export function Hero() {
               className="flex flex-wrap justify-center gap-3 pt-4"
             >
               <Button href={`mailto:${siteData.email}`}>
-                <Icon name="email" className="w-4 h-4" />
+                <FaEnvelope className="w-4 h-4" />
                 Email
               </Button>
               <Button href={siteData.resume} variant="secondary" external>
-                <Icon name="download" className="w-4 h-4" />
+                <FaDownload className="w-4 h-4" />
                 Resume
               </Button>
               <Button href={siteData.social.linkedin} variant="secondary" external>
-                <Icon name="linkedin" className="w-4 h-4" />
+                <FaLinkedin className="w-4 h-4 text-[#0A66C2]" />
                 LinkedIn
               </Button>
               <Button href={siteData.social.github} variant="secondary" external>
-                <Icon name="github" className="w-4 h-4" />
+                <FaGithub className="w-4 h-4" />
                 GitHub
               </Button>
               <Button href={siteData.blog.url} variant="secondary" external>
-                <Icon name="blog" className="w-4 h-4" />
+                <FaNewspaper className="w-4 h-4" />
                 Blog
               </Button>
             </motion.div>
@@ -158,7 +165,7 @@ export function Hero() {
               animate={{ y: [0, 6, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Icon name="arrow-down" className="w-5 h-5" />
+              <FaArrowDown className="w-5 h-5" />
             </motion.div>
           </button>
         </motion.div>

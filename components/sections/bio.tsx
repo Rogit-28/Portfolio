@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Icon } from "@/components/ui/icon";
+import { FaGraduationCap } from "react-icons/fa";
 import { Tag } from "@/components/ui/tag";
 import siteData from "@/data/site.json";
 
@@ -92,7 +92,7 @@ export function Bio() {
           >
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <Icon name="arrow-down" className="w-4 h-4" />
+                <FaGraduationCap className="w-4 h-4" />
                 <h3 className="font-semibold text-foreground">Currently Learning</h3>
               </div>
               <div className="flex flex-wrap gap-2 ml-6">

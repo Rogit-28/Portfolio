@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import { ThemeToggle } from "../ui/theme-toggle";
 import { TerminalPalette } from "../ui/terminal-palette";
-import { Icon } from "../ui/icon";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -127,7 +127,7 @@ export function Header() {
             onClick={() => goToMobileIndex(currentMobileIndex - 1)}
             aria-label="Previous page"
           >
-            <Icon name="arrow-left" className="w-4 h-4" />
+            <FaChevronLeft className="w-4 h-4" />
           </button>
 
           <Link
@@ -144,7 +144,7 @@ export function Header() {
             onClick={() => goToMobileIndex(currentMobileIndex + 1)}
             aria-label="Next page"
           >
-            <Icon name="arrow-right" className="w-4 h-4" />
+            <FaChevronRight className="w-4 h-4" />
           </button>
         </motion.nav>
       </motion.header>

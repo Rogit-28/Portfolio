@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Container } from "./container";
-import { Icon } from "@/components/ui/icon";
+import { FaGithub, FaLinkedin, FaEnvelope } from "react-icons/fa";
 import siteData from "@/data/site.json";
 
 export function Footer() {
@@ -19,30 +19,30 @@ export function Footer() {
           <div className="flex items-center gap-4">
             <Link
               href={`mailto:${siteData.email}`}
-              className="text-muted-foreground hover:text-accent transition-colors"
+              className="text-muted-foreground hover:text-[#EA4335] transition-colors"
               aria-label="Email"
             >
-              <Icon name="email" className="w-5 h-5" />
+              <FaEnvelope className="w-5 h-5" />
             </Link>
 
             <Link
               href={siteData.social.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-accent transition-colors"
+              className="text-muted-foreground hover:text-[#0A66C2] transition-colors"
               aria-label="LinkedIn"
             >
-              <Icon name="linkedin" className="w-5 h-5" />
+              <FaLinkedin className="w-5 h-5" />
             </Link>
 
             <Link
               href={siteData.social.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-accent transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
               aria-label="GitHub"
             >
-              <Icon name="github" className="w-5 h-5" />
+              <FaGithub className="w-5 h-5" />
             </Link>
           </div>
         </div>

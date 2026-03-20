@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Icon } from "@/components/ui/icon";
+import { FaHome, FaArrowRight } from "react-icons/fa";
 import siteData from "@/data/site.json";
 
 const terminals = [
@@ -70,14 +70,14 @@ export function NotFoundContent() {
                 href="/"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
               >
-                <Icon name="home" className="w-4 h-4" />
+                <FaHome className="w-4 h-4" />
                 Return Home
               </Link>
               <Link
                 href="/projects"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-cyan-500/10 text-cyan-600 hover:bg-cyan-500/20 transition-colors"
               >
-                <Icon name="arrow-right" className="w-4 h-4" />
+                <FaArrowRight className="w-4 h-4" />
                 View Projects
               </Link>
             </div>

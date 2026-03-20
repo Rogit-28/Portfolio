@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Icon } from "./icon";
+import { FaTerminal, FaTimes } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
@@ -283,7 +283,7 @@ export function TerminalPalette() {
         aria-label="Open terminal"
         title="Open terminal (⌘K)"
       >
-        <Icon name="terminal" className="w-5 h-5" />
+        <FaTerminal className="w-5 h-5" />
       </button>
 
       <AnimatePresence>
@@ -318,7 +318,7 @@ export function TerminalPalette() {
                     onClick={() => setIsOpen(false)}
                     className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    <Icon name="close" className="w-4 h-4" />
+                    <FaTimes className="w-4 h-4" />
                   </button>
                 </div>
               </div>
