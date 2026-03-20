@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { EasterEggs } from "@/components/ui/easter-eggs";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import siteData from "@/data/site.json";
 
 const geistSans = Geist({
@@ -82,6 +83,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
