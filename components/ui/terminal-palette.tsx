@@ -6,13 +6,25 @@ import { FaTerminal, FaTimes } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
+import siteData from "@/data/site.json";
+import experienceData from "@/data/experience.json";
 
 interface Command {
   name: string;
   description: string;
-  action: () => void | Promise<void>;
+  action: () => void | string | Promise<void>;
   keywords?: string[];
 }
+
+// ASCII art for neofetch/whoami
+const ASCII_LOGO = `
+   ____            _ _   
+  |  _ \\ ___   __ _(_) |_ 
+  | |_) / _ \\ / _\` | | __|
+  |  _ < (_) | (_| | | |_ 
+  |_| \\_\\___/ \\__, |_|\\__|
+              |___/       
+`.trim();
 
 interface TerminalHistoryItem {
   input: string;
@@ -31,10 +43,6 @@ export function TerminalPalette() {
   const outputRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { setTheme } = useTheme();
-
-  const siteData = {
-    name: "Portfolio Owner",
-  };
 
   const commands: Command[] = [
     {
@@ -69,7 +77,7 @@ export function TerminalPalette() {
       description: "Contact me",
       action: () => {
         setIsOpen(false);
-        window.location.href = "mailto:hello@example.com";
+        window.location.href = `mailto:${siteData.email}`;
       },
       keywords: ["email", "reach"],
     },
@@ -153,6 +161,315 @@ export function TerminalPalette() {
         setOutput("🥪 Sandwich making is a privileged operation. Please make it yourself.");
       },
     },
+    // ===== DATA COMMANDS =====
+    {
+      name: "whoami",
+      description: "Display user identity and info",
+      action: () => {
+        const info = [
+          ASCII_LOGO,
+          "",
+          `  Name:     ${siteData.name}`,
+          `  Title:    ${siteData.title}`,
+          `  Location: ${siteData.location}`,
+          `  Email:    ${siteData.email}`,
+          "",
+          `  "${siteData.bio.short}"`,
+        ].join("\n");
+        setOutput(info);
+      },
+      keywords: ["me", "identity", "user"],
+    },
+    {
+      name: "neofetch",
+      description: "Display system info (portfolio style)",
+      action: () => {
+        const workCount = experienceData.work.length;
+        const skillCount = siteData.skills.languages.length + siteData.skills.tools.length;
+        const researchCount = siteData.research.length;
+        
+        const lines = ASCII_LOGO.split("\n");
+        const info = [
+          `guest@rogit.me`,
+          `─────────────────────`,
+          `OS: Portfolio v2.0`,
+          `Host: ${siteData.institution}`,
+          `Kernel: Next.js 16 + TypeScript`,
+          `Uptime: ${new Date().getFullYear() - 2022} years (since college)`,
+          `Packages: ${skillCount} skills installed`,
+          `Shell: terminal-palette.tsx`,
+          `Terminal: 80x24`,
+          `CPU: ${siteData.name}`,
+          `Memory: ${workCount} internships / ${researchCount} papers`,
+          ``,
+          `[Languages] ${siteData.skills.languages.join(", ")}`,
+          `[Focus] ${siteData.tagline.join(" • ")}`,
+        ];
+        
+        // Combine ASCII art with info side by side
+        const maxLines = Math.max(lines.length, info.length);
+        const combined = [];
+        for (let i = 0; i < maxLines; i++) {
+          const artLine = (lines[i] || "").padEnd(30);
+          const infoLine = info[i] || "";
+          combined.push(`${artLine}${infoLine}`);
+        }
+        setOutput(combined.join("\n"));
+      },
+      keywords: ["fetch", "sysinfo", "system"],
+    },
+    {
+      name: "skills",
+      description: "List technical skills",
+      action: () => {
+        const { languages, tools, interests, soft } = siteData.skills;
+        const output = [
+          "┌─ Languages ─────────────────────────┐",
+          `│  ${languages.join(", ")}`,
+          "├─ Tools & Frameworks ────────────────┤",
+          `│  ${tools.slice(0, 6).join(", ")}`,
+          `│  ${tools.slice(6).join(", ")}`,
+          "├─ Interests ─────────────────────────┤",
+          `│  ${interests.slice(0, 4).join(", ")}`,
+          `│  ${interests.slice(4).join(", ")}`,
+          "├─ Soft Skills ───────────────────────┤",
+          `│  ${soft.join(", ")}`,
+          "└──────────────────────────────────────┘",
+        ].join("\n");
+        setOutput(output);
+      },
+      keywords: ["tech", "stack", "technologies"],
+    },
+    {
+      name: "education",
+      description: "View education details",
+      action: () => {
+        const edu = experienceData.education[0];
+        const output = [
+          "🎓 EDUCATION",
+          "─".repeat(40),
+          `  ${edu.degree} in ${edu.field}`,
+          `  ${edu.institution}`,
+          `  ${edu.startDate} - ${edu.current ? "Present" : edu.endDate}`,
+          `  ${edu.grade}`,
+        ].join("\n");
+        setOutput(output);
+      },
+      keywords: ["degree", "university", "college", "cgpa"],
+    },
+    {
+      name: "work",
+      description: "View work experience",
+      action: () => {
+        const lines = ["💼 WORK EXPERIENCE", "─".repeat(50)];
+        experienceData.work.forEach((job, idx) => {
+          const endDate = job.current ? "Present" : job.endDate;
+          lines.push(`\n  [${idx + 1}] ${job.role}`);
+          lines.push(`      ${job.company} • ${job.location}`);
+          lines.push(`      ${job.startDate} → ${endDate}`);
+        });
+        lines.push("\n  Type 'experience' to view full details →");
+        setOutput(lines.join("\n"));
+      },
+      keywords: ["jobs", "internship", "career", "exp"],
+    },
+    {
+      name: "research",
+      description: "View published research",
+      action: () => {
+        const lines = ["📄 RESEARCH & PUBLICATIONS", "─".repeat(50)];
+        siteData.research.forEach((paper, idx) => {
+          lines.push(`\n  [${idx + 1}] "${paper.title}"`);
+          lines.push(`      ${paper.publication}`);
+          lines.push(`      DOI: ${paper.doi}`);
+          lines.push(`      ${paper.description}`);
+        });
+        setOutput(lines.join("\n"));
+      },
+      keywords: ["papers", "publications", "academic"],
+    },
+    {
+      name: "social",
+      description: "Display social links",
+      action: () => {
+        const output = [
+          "🔗 CONNECT WITH ME",
+          "─".repeat(40),
+          `  LinkedIn:  ${siteData.social.linkedin}`,
+          `  GitHub:    ${siteData.social.github}`,
+          `  Blog:      ${siteData.blog.url}`,
+          `  Email:     ${siteData.email}`,
+          "",
+          "  Tip: Click links above or use 'contact' command",
+        ].join("\n");
+        setOutput(output);
+      },
+      keywords: ["links", "connect", "linkedin", "github"],
+    },
+    // ===== UNIX-LIKE COMMANDS =====
+    {
+      name: "ls",
+      description: "List available sections",
+      action: () => {
+        const output = [
+          "drwxr-xr-x  rogit  staff  home/",
+          "drwxr-xr-x  rogit  staff  experience/",
+          "drwxr-xr-x  rogit  staff  projects/",
+          "drwxr-xr-x  rogit  staff  about/",
+          "-rw-r--r--  rogit  staff  resume.pdf",
+          "-rw-r--r--  rogit  staff  README.md",
+        ].join("\n");
+        setOutput(output);
+      },
+      keywords: ["list", "dir", "files"],
+    },
+    {
+      name: "cat",
+      description: "View file contents",
+      action: () => {
+        setOutput("Usage: cat <filename>\n  Try: cat resume.pdf, cat README.md");
+      },
+    },
+    {
+      name: "cat resume.pdf",
+      description: "Open resume",
+      action: () => {
+        window.open(siteData.resume, "_blank");
+        setOutput("📄 Opening resume.pdf in new tab...");
+      },
+    },
+    {
+      name: "cat README.md",
+      description: "View README",
+      action: () => {
+        const readme = [
+          "# " + siteData.name,
+          "",
+          siteData.bio.intro,
+          "",
+          "## Quick Links",
+          "- Type `neofetch` for system info",
+          "- Type `skills` to see my tech stack", 
+          "- Type `work` for experience",
+          "- Type `projects` to explore my work",
+        ].join("\n");
+        setOutput(readme);
+      },
+    },
+    {
+      name: "pwd",
+      description: "Print working directory",
+      action: () => {
+        setOutput("/home/guest/rogit-portfolio");
+      },
+    },
+    {
+      name: "date",
+      description: "Show current date/time",
+      action: () => {
+        setOutput(new Date().toString());
+      },
+      keywords: ["time", "now"],
+    },
+    {
+      name: "echo",
+      description: "Echo text back",
+      action: () => {
+        setOutput("Usage: echo <text>");
+      },
+    },
+    {
+      name: "history",
+      description: "Show command history",
+      action: () => {
+        if (history.length === 0) {
+          setOutput("No commands in history yet.");
+          return;
+        }
+        const lines = history.map((h, i) => `  ${(i + 1).toString().padStart(3)}  ${h.input}`);
+        setOutput(lines.join("\n"));
+      },
+    },
+    // ===== EASTER EGGS =====
+    {
+      name: "fortune",
+      description: "Get your fortune",
+      action: () => {
+        const fortunes = [
+          "You will mass mass produce mass-produced code.",
+          "A segfault in production will teach you more than 100 tutorials.",
+          "The debugger sees all. The debugger knows all.",
+          "git push --force is in your future... unfortunately.",
+          "You will find the missing semicolon. Eventually.",
+          "Today is a good day to refactor that code you wrote 3 months ago.",
+          "The coffee machine and the code editor are your best friends.",
+        ];
+        setOutput(`🔮 ${fortunes[Math.floor(Math.random() * fortunes.length)]}`);
+      },
+      keywords: ["luck", "predict"],
+    },
+    {
+      name: "cowsay",
+      description: "Cow says...",
+      action: () => {
+        const messages = ["Moo!", "Hire Rogit!", "I'm a cow, not a debugger", "TypeScript > JavaScript"];
+        const msg = messages[Math.floor(Math.random() * messages.length)];
+        const cow = [
+          ` ${"_".repeat(msg.length + 2)}`,
+          `< ${msg} >`,
+          ` ${"-".repeat(msg.length + 2)}`,
+          "        \\   ^__^",
+          "         \\  (oo)\\_______",
+          "            (__)\\       )\\/\\",
+          "                ||----w |",
+          "                ||     ||",
+        ].join("\n");
+        setOutput(cow);
+      },
+    },
+    {
+      name: "rm -rf /",
+      description: "Delete everything",
+      action: () => {
+        setOutput("Nice try. 🙃\n\nrm: cannot remove '/': Permission denied\n(This is a portfolio, not a real filesystem)");
+      },
+      keywords: ["delete", "remove"],
+    },
+    {
+      name: "vim",
+      description: "Open vim",
+      action: () => {
+        setOutput("You have entered vim.\n\n...Good luck getting out.\n\nHint: ESC :q! Enter (or just close this terminal)");
+      },
+      keywords: ["vi", "editor"],
+    },
+    {
+      name: "exit",
+      description: "Close terminal",
+      action: () => {
+        setOutput("Goodbye! 👋");
+        setTimeout(() => setIsOpen(false), 500);
+      },
+      keywords: ["quit", "close", "bye"],
+    },
+    {
+      name: "hack",
+      description: "🔓",
+      action: () => {
+        const hackOutput = [
+          "[*] Initializing hack sequence...",
+          "[*] Bypassing firewall... SUCCESS",
+          "[*] Accessing mainframe... SUCCESS", 
+          "[*] Downloading secrets... 100%",
+          "[!] ALERT: Intrusion detected!",
+          "[*] Covering tracks...",
+          "",
+          "Just kidding. This is a portfolio. 😄",
+          "But nice hacker spirit! Maybe try 'matrix' instead.",
+        ];
+        setOutput(hackOutput.join("\n"));
+      },
+    },
   ];
 
   useEffect(() => {
@@ -200,12 +517,37 @@ export function TerminalPalette() {
   const findCommand = (inputStr: string): Command | null => {
     const trimmed = inputStr.trim().toLowerCase();
 
+    // Exact match first
     for (const cmd of commands) {
       if (cmd.name.toLowerCase() === trimmed) return cmd;
     }
 
+    // Keyword match
     for (const cmd of commands) {
       if (cmd.keywords?.some((kw) => kw === trimmed)) return cmd;
+    }
+
+    return null;
+  };
+
+  // Handle dynamic commands with arguments
+  const handleDynamicCommand = (inputStr: string): string | null => {
+    const trimmed = inputStr.trim();
+    
+    // echo <text>
+    if (trimmed.toLowerCase().startsWith("echo ")) {
+      const text = trimmed.slice(5);
+      return text || "(empty)";
+    }
+    
+    // open <url>
+    if (trimmed.toLowerCase().startsWith("open ")) {
+      const url = trimmed.slice(5);
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        window.open(url, "_blank");
+        return `Opening ${url}...`;
+      }
+      return `Invalid URL. Usage: open https://example.com`;
     }
 
     return null;
@@ -230,9 +572,10 @@ export function TerminalPalette() {
     const trimmed = input.trim();
     if (!trimmed) return;
 
-    const cmd = findCommand(trimmed);
-    
     let outputText: string | undefined;
+    
+    // Try static command first
+    const cmd = findCommand(trimmed);
     
     if (cmd) {
       // Execute command - it may return a string, void, or Promise
@@ -244,7 +587,13 @@ export function TerminalPalette() {
       }
       // If void/undefined, the command handles its own output via setOutput()
     } else {
-      outputText = `Command not found: ${trimmed}. Type 'help' for available commands.`;
+      // Try dynamic command
+      const dynamicResult = handleDynamicCommand(trimmed);
+      if (dynamicResult !== null) {
+        outputText = dynamicResult;
+      } else {
+        outputText = `Command not found: ${trimmed}. Type 'help' for available commands.`;
+      }
     }
 
     const newHistoryItem: TerminalHistoryItem = {
