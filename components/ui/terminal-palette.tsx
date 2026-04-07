@@ -86,7 +86,7 @@ export function TerminalPalette() {
       description: "Toggle dark/light mode",
       action: () => {
         setTheme((t) => (t === "dark" ? "light" : "dark"));
-        setOutput("Theme toggled! 🎨");
+        return "Theme toggled! 🎨";
       },
       keywords: ["dark", "light", "mode"],
     },
@@ -101,7 +101,7 @@ export function TerminalPalette() {
           "I've accidentally deployed to production twice... this year",
           "I break for coffee",
         ];
-        setOutput(facts[Math.floor(Math.random() * facts.length)]);
+        return facts[Math.floor(Math.random() * facts.length)];
       },
       keywords: ["fact", "fun"],
     },
@@ -109,9 +109,9 @@ export function TerminalPalette() {
       name: "matrix",
       description: "🚨 Enter the Matrix",
       action: () => {
-        setOutput("Matrix activated... look behind you 👀");
         setIsMatrixActive(true);
         setTimeout(() => setIsMatrixActive(false), 5000);
+        return "Matrix activated... look behind you 👀";
       },
       keywords: ["green", "code", "neo"],
     },
@@ -126,7 +126,7 @@ export function TerminalPalette() {
           "I'd tell you, but then I'd have to... wait, actually I just don't know",
           "sudo: effective uid is not 0, is sudo installed?",
         ];
-        setOutput(sudoOutputs[Math.floor(Math.random() * sudoOutputs.length)]);
+        return sudoOutputs[Math.floor(Math.random() * sudoOutputs.length)];
       },
     },
     {
@@ -143,7 +143,7 @@ export function TerminalPalette() {
       description: "Show all commands",
       action: () => {
         const help = commands.map((c) => `  ${c.name.padEnd(12)} - ${c.description}`).join("\n");
-        setOutput(`Available commands:\n${help}`);
+        return `Available commands:\n${help}`;
       },
       keywords: ["commands", "list"],
     },
@@ -151,14 +151,14 @@ export function TerminalPalette() {
       name: "sudo make-coffee",
       description: "☕",
       action: () => {
-        setOutput("☕ Brewing coffee... Error: coffee machine not found. You'll have to go to the kitchen.");
+        return "☕ Brewing coffee... Error: coffee machine not found. You'll have to go to the kitchen.";
       },
     },
     {
       name: "sudo make-sandwich",
       description: "🥪",
       action: () => {
-        setOutput("🥪 Sandwich making is a privileged operation. Please make it yourself.");
+        return "🥪 Sandwich making is a privileged operation. Please make it yourself.";
       },
     },
     // ===== DATA COMMANDS =====
@@ -166,7 +166,7 @@ export function TerminalPalette() {
       name: "whoami",
       description: "Display user identity and info",
       action: () => {
-        const info = [
+        return [
           ASCII_LOGO,
           "",
           `  Name:     ${siteData.name}`,
@@ -176,7 +176,6 @@ export function TerminalPalette() {
           "",
           `  "${siteData.bio.short}"`,
         ].join("\n");
-        setOutput(info);
       },
       keywords: ["me", "identity", "user"],
     },
@@ -214,7 +213,7 @@ export function TerminalPalette() {
           const infoLine = info[i] || "";
           combined.push(`${artLine}${infoLine}`);
         }
-        setOutput(combined.join("\n"));
+        return combined.join("\n");
       },
       keywords: ["fetch", "sysinfo", "system"],
     },
@@ -223,7 +222,7 @@ export function TerminalPalette() {
       description: "List technical skills",
       action: () => {
         const { languages, tools, interests, soft } = siteData.skills;
-        const output = [
+        return [
           "┌─ Languages ─────────────────────────┐",
           `│  ${languages.join(", ")}`,
           "├─ Tools & Frameworks ────────────────┤",
@@ -236,7 +235,6 @@ export function TerminalPalette() {
           `│  ${soft.join(", ")}`,
           "└──────────────────────────────────────┘",
         ].join("\n");
-        setOutput(output);
       },
       keywords: ["tech", "stack", "technologies"],
     },
@@ -245,7 +243,7 @@ export function TerminalPalette() {
       description: "View education details",
       action: () => {
         const edu = experienceData.education[0];
-        const output = [
+        return [
           "🎓 EDUCATION",
           "─".repeat(40),
           `  ${edu.degree} in ${edu.field}`,
@@ -253,7 +251,6 @@ export function TerminalPalette() {
           `  ${edu.startDate} - ${edu.current ? "Present" : edu.endDate}`,
           `  ${edu.grade}`,
         ].join("\n");
-        setOutput(output);
       },
       keywords: ["degree", "university", "college", "cgpa"],
     },
@@ -269,7 +266,7 @@ export function TerminalPalette() {
           lines.push(`      ${job.startDate} → ${endDate}`);
         });
         lines.push("\n  Type 'experience' to view full details →");
-        setOutput(lines.join("\n"));
+        return lines.join("\n");
       },
       keywords: ["jobs", "internship", "career", "exp"],
     },
@@ -284,7 +281,7 @@ export function TerminalPalette() {
           lines.push(`      DOI: ${paper.doi}`);
           lines.push(`      ${paper.description}`);
         });
-        setOutput(lines.join("\n"));
+        return lines.join("\n");
       },
       keywords: ["papers", "publications", "academic"],
     },
@@ -292,7 +289,7 @@ export function TerminalPalette() {
       name: "social",
       description: "Display social links",
       action: () => {
-        const output = [
+        return [
           "🔗 CONNECT WITH ME",
           "─".repeat(40),
           `  LinkedIn:  ${siteData.social.linkedin}`,
@@ -302,7 +299,6 @@ export function TerminalPalette() {
           "",
           "  Tip: Click links above or use 'contact' command",
         ].join("\n");
-        setOutput(output);
       },
       keywords: ["links", "connect", "linkedin", "github"],
     },
@@ -311,7 +307,7 @@ export function TerminalPalette() {
       name: "ls",
       description: "List available sections",
       action: () => {
-        const output = [
+        return [
           "drwxr-xr-x  rogit  staff  home/",
           "drwxr-xr-x  rogit  staff  experience/",
           "drwxr-xr-x  rogit  staff  projects/",
@@ -319,7 +315,6 @@ export function TerminalPalette() {
           "-rw-r--r--  rogit  staff  resume.pdf",
           "-rw-r--r--  rogit  staff  README.md",
         ].join("\n");
-        setOutput(output);
       },
       keywords: ["list", "dir", "files"],
     },
@@ -327,7 +322,7 @@ export function TerminalPalette() {
       name: "cat",
       description: "View file contents",
       action: () => {
-        setOutput("Usage: cat <filename>\n  Try: cat resume.pdf, cat README.md");
+        return "Usage: cat <filename>\n  Try: cat resume.pdf, cat README.md";
       },
     },
     {
@@ -335,14 +330,14 @@ export function TerminalPalette() {
       description: "Open resume",
       action: () => {
         window.open(siteData.resume, "_blank");
-        setOutput("📄 Opening resume.pdf in new tab...");
+        return "📄 Opening resume.pdf in new tab...";
       },
     },
     {
       name: "cat README.md",
       description: "View README",
       action: () => {
-        const readme = [
+        return [
           "# " + siteData.name,
           "",
           siteData.bio.intro,
@@ -353,21 +348,20 @@ export function TerminalPalette() {
           "- Type `work` for experience",
           "- Type `projects` to explore my work",
         ].join("\n");
-        setOutput(readme);
       },
     },
     {
       name: "pwd",
       description: "Print working directory",
       action: () => {
-        setOutput("/home/guest/rogit-portfolio");
+        return "/home/guest/rogit-portfolio";
       },
     },
     {
       name: "date",
       description: "Show current date/time",
       action: () => {
-        setOutput(new Date().toString());
+        return new Date().toString();
       },
       keywords: ["time", "now"],
     },
@@ -375,7 +369,7 @@ export function TerminalPalette() {
       name: "echo",
       description: "Echo text back",
       action: () => {
-        setOutput("Usage: echo <text>");
+        return "Usage: echo <text>";
       },
     },
     {
@@ -383,11 +377,10 @@ export function TerminalPalette() {
       description: "Show command history",
       action: () => {
         if (history.length === 0) {
-          setOutput("No commands in history yet.");
-          return;
+          return "No commands in history yet.";
         }
         const lines = history.map((h, i) => `  ${(i + 1).toString().padStart(3)}  ${h.input}`);
-        setOutput(lines.join("\n"));
+        return lines.join("\n");
       },
     },
     // ===== EASTER EGGS =====
@@ -404,7 +397,7 @@ export function TerminalPalette() {
           "Today is a good day to refactor that code you wrote 3 months ago.",
           "The coffee machine and the code editor are your best friends.",
         ];
-        setOutput(`🔮 ${fortunes[Math.floor(Math.random() * fortunes.length)]}`);
+        return `🔮 ${fortunes[Math.floor(Math.random() * fortunes.length)]}`;
       },
       keywords: ["luck", "predict"],
     },
@@ -414,7 +407,7 @@ export function TerminalPalette() {
       action: () => {
         const messages = ["Moo!", "Hire Rogit!", "I'm a cow, not a debugger", "TypeScript > JavaScript"];
         const msg = messages[Math.floor(Math.random() * messages.length)];
-        const cow = [
+        return [
           ` ${"_".repeat(msg.length + 2)}`,
           `< ${msg} >`,
           ` ${"-".repeat(msg.length + 2)}`,
@@ -424,14 +417,13 @@ export function TerminalPalette() {
           "                ||----w |",
           "                ||     ||",
         ].join("\n");
-        setOutput(cow);
       },
     },
     {
       name: "rm -rf /",
       description: "Delete everything",
       action: () => {
-        setOutput("Nice try. 🙃\n\nrm: cannot remove '/': Permission denied\n(This is a portfolio, not a real filesystem)");
+        return "Nice try. 🙃\n\nrm: cannot remove '/': Permission denied\n(This is a portfolio, not a real filesystem)";
       },
       keywords: ["delete", "remove"],
     },
@@ -439,7 +431,7 @@ export function TerminalPalette() {
       name: "vim",
       description: "Open vim",
       action: () => {
-        setOutput("You have entered vim.\n\n...Good luck getting out.\n\nHint: ESC :q! Enter (or just close this terminal)");
+        return "You have entered vim.\n\n...Good luck getting out.\n\nHint: ESC :q! Enter (or just close this terminal)";
       },
       keywords: ["vi", "editor"],
     },
@@ -447,8 +439,8 @@ export function TerminalPalette() {
       name: "exit",
       description: "Close terminal",
       action: () => {
-        setOutput("Goodbye! 👋");
         setTimeout(() => setIsOpen(false), 500);
+        return "Goodbye! 👋";
       },
       keywords: ["quit", "close", "bye"],
     },
@@ -456,7 +448,7 @@ export function TerminalPalette() {
       name: "hack",
       description: "🔓",
       action: () => {
-        const hackOutput = [
+        return [
           "[*] Initializing hack sequence...",
           "[*] Bypassing firewall... SUCCESS",
           "[*] Accessing mainframe... SUCCESS", 
@@ -466,8 +458,7 @@ export function TerminalPalette() {
           "",
           "Just kidding. This is a portfolio. 😄",
           "But nice hacker spirit! Maybe try 'matrix' instead.",
-        ];
-        setOutput(hackOutput.join("\n"));
+        ].join("\n");
       },
     },
   ];
