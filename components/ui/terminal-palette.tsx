@@ -18,13 +18,32 @@ interface Command {
 
 // ASCII art for neofetch/whoami
 const ASCII_LOGO = `
-   ____            _ _   
-  |  _ \\ ___   __ _(_) |_ 
-  | |_) / _ \\ / _\` | | __|
-  |  _ < (_) | (_| | | |_ 
-  |_| \\_\\___/ \\__, |_|\\__|
-              |___/       
+    ____             _ __  
+   / __ \\____  ____ (_) /_ 
+  / /_/ / __ \\/ __ \\/ / __/
+ / _, _/ /_/ / /_/ / / /_  
+/_/ |_|\\____/\\__, /_/\\__/  
+            /____/         
 `.trim();
+
+// Box drawing helpers
+const BOX = {
+  tl: "╭", tr: "╮", bl: "╰", br: "╯",
+  h: "─", v: "│",
+  lt: "├", rt: "┤",
+} as const;
+
+const boxLine = (width: number) => BOX.h.repeat(width);
+const boxTop = (title: string, width: number) => {
+  const padding = width - title.length - 4;
+  return `${BOX.tl}${BOX.h} ${title} ${BOX.h.repeat(Math.max(0, padding))}${BOX.tr}`;
+};
+const boxMid = (width: number) => `${BOX.lt}${boxLine(width)}${BOX.rt}`;
+const boxBot = (width: number) => `${BOX.bl}${boxLine(width)}${BOX.br}`;
+const boxRow = (text: string, width: number) => {
+  const padding = width - text.length - 2;
+  return `${BOX.v} ${text}${" ".repeat(Math.max(0, padding))}${BOX.v}`;
+};
 
 interface TerminalHistoryItem {
   input: string;
@@ -40,7 +59,7 @@ export function TerminalPalette() {
   const [output, setOutput] = useState<string>("");
   const [isMatrixActive, setIsMatrixActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const outputRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { setTheme } = useTheme();
 
@@ -83,51 +102,39 @@ export function TerminalPalette() {
     },
     {
       name: "theme",
-      description: "Toggle dark/light mode",
+      description: "Toggle theme",
       action: () => {
         setTheme((t) => (t === "dark" ? "light" : "dark"));
-        return "Theme toggled! 🎨";
+        return "\n  🎨 Theme toggled!\n";
       },
       keywords: ["dark", "light", "mode"],
     },
     {
       name: "random",
-      description: "Get a random fun fact",
+      description: "Random fun fact",
       action: () => {
         const facts = [
-          "I once debugged for 6 hours before realizing I was working on the wrong branch",
-          "My first program was 'Hello World' in Python... it still works!",
-          "I prefer spaces over tabs (sorry not sorry)",
-          "I've accidentally deployed to production twice... this year",
-          "I break for coffee",
+          "I once debugged for 6 hours before realizing I was on the wrong branch 🤦",
+          "My first program was 'Hello World' in Python... and it still works!",
+          "I prefer spaces over tabs. Yes, this is the hill I'll die on.",
+          "I've accidentally deployed to production twice... this year.",
+          "I break for coffee. And by break, I mean the code breaks without it.",
+          "My git commit messages get progressively less descriptive after midnight.",
+          "I once fixed a bug by adding a comment. Don't ask.",
         ];
-        return facts[Math.floor(Math.random() * facts.length)];
+        return `\n  💡 ${facts[Math.floor(Math.random() * facts.length)]}\n`;
       },
       keywords: ["fact", "fun"],
     },
     {
       name: "matrix",
-      description: "🚨 Enter the Matrix",
+      description: "Enter the Matrix",
       action: () => {
         setIsMatrixActive(true);
         setTimeout(() => setIsMatrixActive(false), 5000);
-        return "Matrix activated... look behind you 👀";
+        return "\n  🟢 Matrix activated... follow the white rabbit.\n";
       },
       keywords: ["green", "code", "neo"],
-    },
-    {
-      name: "sudo",
-      description: "?",
-      action: () => {
-        const sudoOutputs = [
-          "You're not root. Nice try though 🤨",
-          "sudo make-me-a-sandwich",
-          "Permission denied (but keep trying)",
-          "I'd tell you, but then I'd have to... wait, actually I just don't know",
-          "sudo: effective uid is not 0, is sudo installed?",
-        ];
-        return sudoOutputs[Math.floor(Math.random() * sudoOutputs.length)];
-      },
     },
     {
       name: "clear",
@@ -142,77 +149,123 @@ export function TerminalPalette() {
       name: "help",
       description: "Show all commands",
       action: () => {
-        const help = commands.map((c) => `  ${c.name.padEnd(12)} - ${c.description}`).join("\n");
-        return `Available commands:\n${help}`;
+        const categories = {
+          "Navigation": ["home", "experience", "projects", "about", "contact"],
+          "Info": ["whoami", "neofetch", "skills", "education", "work", "research", "social"],
+          "Unix": ["ls", "cat", "pwd", "date", "echo", "history", "clear"],
+          "Fun": ["theme", "random", "matrix", "fortune", "cowsay", "hack"],
+        };
+        
+        const lines = ["", boxTop("AVAILABLE COMMANDS", 50)];
+        
+        Object.entries(categories).forEach(([category, cmdNames]) => {
+          lines.push(boxRow(`[${category}]`, 50));
+          const cmds = commands.filter(c => cmdNames.includes(c.name));
+          cmds.forEach(c => {
+            lines.push(boxRow(`  ${c.name.padEnd(14)} ${c.description}`, 50));
+          });
+        });
+        
+        lines.push(boxBot(50));
+        lines.push("");
+        lines.push("  💡 Tip: Use Tab for autocomplete, ↑↓ for history");
+        return lines.join("\n");
       },
       keywords: ["commands", "list"],
     },
     {
       name: "sudo make-coffee",
-      description: "☕",
+      description: "Make coffee",
       action: () => {
-        return "☕ Brewing coffee... Error: coffee machine not found. You'll have to go to the kitchen.";
+        return [
+          "",
+          "  ☕ Brewing coffee...",
+          "",
+          "  [▓▓▓▓▓▓▓▓▓▓] Grinding beans... DONE",
+          "  [▓▓▓▓▓▓▓▓▓▓] Heating water.... DONE",
+          "  [▓▓▓▓▓▓▓▓▓▓] Brewing.......... ERROR",
+          "",
+          "  ❌ Error: coffee machine not found",
+          "  You'll have to make it yourself. Sorry!",
+          "",
+        ].join("\n");
       },
     },
     {
       name: "sudo make-sandwich",
-      description: "🥪",
+      description: "Make sandwich",
       action: () => {
-        return "🥪 Sandwich making is a privileged operation. Please make it yourself.";
+        return [
+          "",
+          "  🥪 Making sandwich...",
+          "",
+          "  ❌ Error: Sandwich making is a privileged operation.",
+          "",
+          "  Suggestion: sudo make-me-a-sandwich",
+          "  Response: Okay.",
+          "",
+          "  Just kidding. Make it yourself. 🙂",
+          "",
+        ].join("\n");
       },
     },
     // ===== DATA COMMANDS =====
     {
       name: "whoami",
-      description: "Display user identity and info",
+      description: "Display user identity",
       action: () => {
+        const w = 44;
         return [
+          "",
           ASCII_LOGO,
           "",
-          `  Name:     ${siteData.name}`,
-          `  Title:    ${siteData.title}`,
-          `  Location: ${siteData.location}`,
-          `  Email:    ${siteData.email}`,
+          boxTop("IDENTITY", w),
+          boxRow(`Name      ${siteData.name}`, w),
+          boxRow(`Title     ${siteData.title}`, w),
+          boxRow(`Location  ${siteData.location}`, w),
+          boxRow(`Email     ${siteData.email}`, w),
+          boxBot(w),
           "",
           `  "${siteData.bio.short}"`,
+          "",
         ].join("\n");
       },
       keywords: ["me", "identity", "user"],
     },
     {
       name: "neofetch",
-      description: "Display system info (portfolio style)",
+      description: "System info (portfolio style)",
       action: () => {
         const workCount = experienceData.work.length;
         const skillCount = siteData.skills.languages.length + siteData.skills.tools.length;
         const researchCount = siteData.research.length;
         
-        const lines = ASCII_LOGO.split("\n");
+        const artLines = ASCII_LOGO.split("\n");
         const info = [
-          `guest@rogit.me`,
-          `─────────────────────`,
-          `OS: Portfolio v2.0`,
-          `Host: ${siteData.institution}`,
-          `Kernel: Next.js 16 + TypeScript`,
-          `Uptime: ${new Date().getFullYear() - 2022} years (since college)`,
-          `Packages: ${skillCount} skills installed`,
-          `Shell: terminal-palette.tsx`,
-          `Terminal: 80x24`,
-          `CPU: ${siteData.name}`,
-          `Memory: ${workCount} internships / ${researchCount} papers`,
+          `\x1b[1mguest\x1b[0m@\x1b[1mrogit.me\x1b[0m`,
+          `──────────────────────────`,
+          `OS        Portfolio v2.0`,
+          `Host      ${siteData.institution.split(",")[0]}`,
+          `Kernel    Next.js 16 + TypeScript`,
+          `Uptime    ${new Date().getFullYear() - 2022} years in college`,
+          `Packages  ${skillCount} skills`,
+          `Shell     zsh (terminal-palette)`,
+          `Terminal  rogit.me`,
+          `CPU       ${siteData.name}`,
+          `Memory    ${workCount} internships • ${researchCount} papers`,
           ``,
-          `[Languages] ${siteData.skills.languages.join(", ")}`,
-          `[Focus] ${siteData.tagline.join(" • ")}`,
+          `Languages ${siteData.skills.languages.join(", ")}`,
+          `Focus     ${siteData.tagline.join(" • ")}`,
         ];
         
-        // Combine ASCII art with info side by side
-        const maxLines = Math.max(lines.length, info.length);
-        const combined = [];
+        const maxLines = Math.max(artLines.length, info.length);
+        const combined = [""];
         for (let i = 0; i < maxLines; i++) {
-          const artLine = (lines[i] || "").padEnd(30);
-          const infoLine = info[i] || "";
-          combined.push(`${artLine}${infoLine}`);
+          const art = (artLines[i] || "").padEnd(28);
+          const inf = info[i] || "";
+          combined.push(`  ${art}${inf}`);
         }
+        combined.push("");
         return combined.join("\n");
       },
       keywords: ["fetch", "sysinfo", "system"],
@@ -222,34 +275,51 @@ export function TerminalPalette() {
       description: "List technical skills",
       action: () => {
         const { languages, tools, interests, soft } = siteData.skills;
+        const w = 52;
         return [
-          "┌─ Languages ─────────────────────────┐",
-          `│  ${languages.join(", ")}`,
-          "├─ Tools & Frameworks ────────────────┤",
-          `│  ${tools.slice(0, 6).join(", ")}`,
-          `│  ${tools.slice(6).join(", ")}`,
-          "├─ Interests ─────────────────────────┤",
-          `│  ${interests.slice(0, 4).join(", ")}`,
-          `│  ${interests.slice(4).join(", ")}`,
-          "├─ Soft Skills ───────────────────────┤",
-          `│  ${soft.join(", ")}`,
-          "└──────────────────────────────────────┘",
+          "",
+          boxTop("TECHNICAL SKILLS", w),
+          boxRow("", w),
+          boxRow("◈ Languages", w),
+          boxRow(`    ${languages.join("  •  ")}`, w),
+          boxRow("", w),
+          boxRow("◈ Tools & Frameworks", w),
+          boxRow(`    ${tools.slice(0, 5).join(", ")}`, w),
+          boxRow(`    ${tools.slice(5).join(", ")}`, w),
+          boxRow("", w),
+          boxRow("◈ Domains", w),
+          boxRow(`    ${interests.slice(0, 3).join(", ")}`, w),
+          boxRow(`    ${interests.slice(3, 6).join(", ")}`, w),
+          boxRow(`    ${interests.slice(6).join(", ")}`, w),
+          boxRow("", w),
+          boxRow("◈ Soft Skills", w),
+          boxRow(`    ${soft.slice(0, 3).join(", ")}`, w),
+          boxRow(`    ${soft.slice(3).join(", ")}`, w),
+          boxBot(w),
+          "",
         ].join("\n");
       },
       keywords: ["tech", "stack", "technologies"],
     },
     {
       name: "education",
-      description: "View education details",
+      description: "View education",
       action: () => {
         const edu = experienceData.education[0];
+        const w = 54;
         return [
-          "🎓 EDUCATION",
-          "─".repeat(40),
-          `  ${edu.degree} in ${edu.field}`,
-          `  ${edu.institution}`,
-          `  ${edu.startDate} - ${edu.current ? "Present" : edu.endDate}`,
-          `  ${edu.grade}`,
+          "",
+          boxTop("🎓 EDUCATION", w),
+          boxRow("", w),
+          boxRow(`${edu.degree}`, w),
+          boxRow(`in ${edu.field}`, w),
+          boxRow("", w),
+          boxRow(`📍 ${edu.institution}`, w),
+          boxRow(`📅 ${edu.startDate} - ${edu.current ? "Present (Final Year)" : edu.endDate}`, w),
+          boxRow(`📊 ${edu.grade}`, w),
+          boxRow("", w),
+          boxBot(w),
+          "",
         ].join("\n");
       },
       keywords: ["degree", "university", "college", "cgpa"],
@@ -258,46 +328,67 @@ export function TerminalPalette() {
       name: "work",
       description: "View work experience",
       action: () => {
-        const lines = ["💼 WORK EXPERIENCE", "─".repeat(50)];
+        const w = 58;
+        const lines = ["", boxTop("💼 WORK EXPERIENCE", w), boxRow("", w)];
+        
         experienceData.work.forEach((job, idx) => {
           const endDate = job.current ? "Present" : job.endDate;
-          lines.push(`\n  [${idx + 1}] ${job.role}`);
-          lines.push(`      ${job.company} • ${job.location}`);
-          lines.push(`      ${job.startDate} → ${endDate}`);
+          const duration = `${job.startDate} → ${endDate}`;
+          lines.push(boxRow(`[${idx + 1}] ${job.role}`, w));
+          lines.push(boxRow(`    @ ${job.company}`, w));
+          lines.push(boxRow(`    📍 ${job.location}  •  📅 ${duration}`, w));
+          if (idx < experienceData.work.length - 1) {
+            lines.push(boxRow("", w));
+          }
         });
-        lines.push("\n  Type 'experience' to view full details →");
+        
+        lines.push(boxRow("", w));
+        lines.push(boxBot(w));
+        lines.push("");
+        lines.push("  → Type 'experience' to view full details with achievements");
+        lines.push("");
         return lines.join("\n");
       },
       keywords: ["jobs", "internship", "career", "exp"],
     },
     {
       name: "research",
-      description: "View published research",
+      description: "View publications",
       action: () => {
-        const lines = ["📄 RESEARCH & PUBLICATIONS", "─".repeat(50)];
+        const w = 62;
+        const lines = ["", boxTop("📄 RESEARCH & PUBLICATIONS", w), boxRow("", w)];
+        
         siteData.research.forEach((paper, idx) => {
-          lines.push(`\n  [${idx + 1}] "${paper.title}"`);
-          lines.push(`      ${paper.publication}`);
-          lines.push(`      DOI: ${paper.doi}`);
-          lines.push(`      ${paper.description}`);
+          lines.push(boxRow(`[${idx + 1}] ${paper.title.slice(0, 50)}...`, w));
+          lines.push(boxRow(`    📰 ${paper.publication}`, w));
+          lines.push(boxRow(`    🔗 DOI: ${paper.doi}`, w));
+          lines.push(boxRow("", w));
         });
+        
+        lines.push(boxBot(w));
+        lines.push("");
         return lines.join("\n");
       },
       keywords: ["papers", "publications", "academic"],
     },
     {
       name: "social",
-      description: "Display social links",
+      description: "Social links",
       action: () => {
+        const w = 52;
         return [
-          "🔗 CONNECT WITH ME",
-          "─".repeat(40),
-          `  LinkedIn:  ${siteData.social.linkedin}`,
-          `  GitHub:    ${siteData.social.github}`,
-          `  Blog:      ${siteData.blog.url}`,
-          `  Email:     ${siteData.email}`,
           "",
-          "  Tip: Click links above or use 'contact' command",
+          boxTop("🔗 CONNECT", w),
+          boxRow("", w),
+          boxRow(`LinkedIn   ${siteData.social.linkedin.replace("https://www.", "")}`, w),
+          boxRow(`GitHub     ${siteData.social.github.replace("https://", "")}`, w),
+          boxRow(`Blog       ${siteData.blog.url.replace("https://", "")}`, w),
+          boxRow(`Email      ${siteData.email}`, w),
+          boxRow("", w),
+          boxBot(w),
+          "",
+          "  💡 Use 'contact' to open email client",
+          "",
         ].join("\n");
       },
       keywords: ["links", "connect", "linkedin", "github"],
@@ -305,15 +396,20 @@ export function TerminalPalette() {
     // ===== UNIX-LIKE COMMANDS =====
     {
       name: "ls",
-      description: "List available sections",
+      description: "List sections",
       action: () => {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
         return [
-          "drwxr-xr-x  rogit  staff  home/",
-          "drwxr-xr-x  rogit  staff  experience/",
-          "drwxr-xr-x  rogit  staff  projects/",
-          "drwxr-xr-x  rogit  staff  about/",
-          "-rw-r--r--  rogit  staff  resume.pdf",
-          "-rw-r--r--  rogit  staff  README.md",
+          "",
+          `total 6`,
+          `drwxr-xr-x  rogit  staff  ${dateStr}  \x1b[34mhome/\x1b[0m`,
+          `drwxr-xr-x  rogit  staff  ${dateStr}  \x1b[34mexperience/\x1b[0m`,
+          `drwxr-xr-x  rogit  staff  ${dateStr}  \x1b[34mprojects/\x1b[0m`,
+          `drwxr-xr-x  rogit  staff  ${dateStr}  \x1b[34mabout/\x1b[0m`,
+          `-rw-r--r--  rogit  staff  ${dateStr}  resume.pdf`,
+          `-rw-r--r--  rogit  staff  ${dateStr}  README.md`,
+          "",
         ].join("\n");
       },
       keywords: ["list", "dir", "files"],
@@ -322,7 +418,7 @@ export function TerminalPalette() {
       name: "cat",
       description: "View file contents",
       action: () => {
-        return "Usage: cat <filename>\n  Try: cat resume.pdf, cat README.md";
+        return "\n  Usage: cat <filename>\n\n  Available files:\n    • resume.pdf    - Open resume\n    • README.md     - About this portfolio\n";
       },
     },
     {
@@ -330,7 +426,7 @@ export function TerminalPalette() {
       description: "Open resume",
       action: () => {
         window.open(siteData.resume, "_blank");
-        return "📄 Opening resume.pdf in new tab...";
+        return "\n  📄 Opening resume.pdf in new tab...\n";
       },
     },
     {
@@ -338,15 +434,20 @@ export function TerminalPalette() {
       description: "View README",
       action: () => {
         return [
-          "# " + siteData.name,
           "",
-          siteData.bio.intro,
+          "  ┌──────────────────────────────────────┐",
+          "  │  # " + siteData.name.padEnd(34) + "│",
+          "  └──────────────────────────────────────┘",
           "",
-          "## Quick Links",
-          "- Type `neofetch` for system info",
-          "- Type `skills` to see my tech stack", 
-          "- Type `work` for experience",
-          "- Type `projects` to explore my work",
+          "  " + siteData.bio.intro,
+          "",
+          "  ## Quick Commands",
+          "  ─────────────────",
+          "    neofetch     System info with ASCII art",
+          "    skills       Technical skills breakdown",
+          "    work         Work experience timeline",
+          "    projects     Navigate to projects page",
+          "",
         ].join("\n");
       },
     },
@@ -354,32 +455,46 @@ export function TerminalPalette() {
       name: "pwd",
       description: "Print working directory",
       action: () => {
-        return "/home/guest/rogit-portfolio";
+        return "\n  /home/guest/rogit-portfolio\n";
       },
     },
     {
       name: "date",
-      description: "Show current date/time",
+      description: "Current date/time",
       action: () => {
-        return new Date().toString();
+        const now = new Date();
+        return `\n  ${now.toLocaleString("en-US", { 
+          weekday: "long", 
+          year: "numeric", 
+          month: "long", 
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          timeZoneName: "short"
+        })}\n`;
       },
       keywords: ["time", "now"],
     },
     {
       name: "echo",
-      description: "Echo text back",
+      description: "Echo text",
       action: () => {
-        return "Usage: echo <text>";
+        return "\n  Usage: echo <message>\n";
       },
     },
     {
       name: "history",
-      description: "Show command history",
+      description: "Command history",
       action: () => {
         if (history.length === 0) {
-          return "No commands in history yet.";
+          return "\n  No commands in history yet.\n";
         }
-        const lines = history.map((h, i) => `  ${(i + 1).toString().padStart(3)}  ${h.input}`);
+        const lines = ["\n"];
+        history.forEach((h, i) => {
+          lines.push(`  ${(i + 1).toString().padStart(4)}  ${h.input}`);
+        });
+        lines.push("");
         return lines.join("\n");
       },
     },
@@ -389,33 +504,45 @@ export function TerminalPalette() {
       description: "Get your fortune",
       action: () => {
         const fortunes = [
-          "You will mass mass produce mass-produced code.",
-          "A segfault in production will teach you more than 100 tutorials.",
-          "The debugger sees all. The debugger knows all.",
-          "git push --force is in your future... unfortunately.",
-          "You will find the missing semicolon. Eventually.",
-          "Today is a good day to refactor that code you wrote 3 months ago.",
-          "The coffee machine and the code editor are your best friends.",
+          "You will mass produce mass-produced code. And it'll work.",
+          "A segfault in production teaches more than 100 tutorials.",
+          "The debugger sees all. The debugger knows all. Trust the debugger.",
+          "git push --force is in your future... choose wisely.",
+          "You will find the missing semicolon. Eventually. Maybe.",
+          "Today is a good day to refactor that code from 3 months ago.",
+          "Coffee → Code → Debug → Repeat. This is the way.",
+          "Your next PR will be approved on the first review. Just kidding.",
+          "The bug you're hunting is on line 42. It's always line 42.",
         ];
-        return `🔮 ${fortunes[Math.floor(Math.random() * fortunes.length)]}`;
+        return `\n  🔮 ${fortunes[Math.floor(Math.random() * fortunes.length)]}\n`;
       },
       keywords: ["luck", "predict"],
     },
     {
       name: "cowsay",
-      description: "Cow says...",
+      description: "Wise cow speaks",
       action: () => {
-        const messages = ["Moo!", "Hire Rogit!", "I'm a cow, not a debugger", "TypeScript > JavaScript"];
+        const messages = [
+          "Hire Rogit!",
+          "Moo-ve fast, break things",
+          "I'm not a debugger, I'm a cow",
+          "TypeScript > JavaScript. Fight me.",
+          "Have you tried turning it off and on?",
+        ];
         const msg = messages[Math.floor(Math.random() * messages.length)];
+        const border = "_".repeat(msg.length + 2);
+        const borderBot = "-".repeat(msg.length + 2);
         return [
-          ` ${"_".repeat(msg.length + 2)}`,
-          `< ${msg} >`,
-          ` ${"-".repeat(msg.length + 2)}`,
-          "        \\   ^__^",
-          "         \\  (oo)\\_______",
-          "            (__)\\       )\\/\\",
-          "                ||----w |",
-          "                ||     ||",
+          "",
+          `   ${border}`,
+          `  < ${msg} >`,
+          `   ${borderBot}`,
+          "          \\   ^__^",
+          "           \\  (oo)\\_______",
+          "              (__)\\       )\\/\\",
+          "                  ||----w |",
+          "                  ||     ||",
+          "",
         ].join("\n");
       },
     },
@@ -423,7 +550,16 @@ export function TerminalPalette() {
       name: "rm -rf /",
       description: "Delete everything",
       action: () => {
-        return "Nice try. 🙃\n\nrm: cannot remove '/': Permission denied\n(This is a portfolio, not a real filesystem)";
+        return [
+          "",
+          "  ⚠️  PERMISSION DENIED",
+          "",
+          "  rm: cannot remove '/': Operation not permitted",
+          "  (Nice try though. This is a portfolio, not a real filesystem)",
+          "",
+          "  💡 Try 'hack' or 'matrix' instead for fun effects",
+          "",
+        ].join("\n");
       },
       keywords: ["delete", "remove"],
     },
@@ -431,7 +567,20 @@ export function TerminalPalette() {
       name: "vim",
       description: "Open vim",
       action: () => {
-        return "You have entered vim.\n\n...Good luck getting out.\n\nHint: ESC :q! Enter (or just close this terminal)";
+        return [
+          "",
+          "  Welcome to VIM - Vi IMproved",
+          "  ─────────────────────────────",
+          "",
+          "  You have entered vim.",
+          "  ...Good luck getting out.",
+          "",
+          "  [Normal mode]",
+          "",
+          "  Hint: ESC :q! Enter",
+          "  Or just close this terminal. We won't judge.",
+          "",
+        ].join("\n");
       },
       keywords: ["vi", "editor"],
     },
@@ -439,26 +588,42 @@ export function TerminalPalette() {
       name: "exit",
       description: "Close terminal",
       action: () => {
-        setTimeout(() => setIsOpen(false), 500);
-        return "Goodbye! 👋";
+        setTimeout(() => setIsOpen(false), 800);
+        return "\n  👋 Goodbye! Come back soon.\n\n  Closing terminal...\n";
       },
       keywords: ["quit", "close", "bye"],
     },
     {
       name: "hack",
-      description: "🔓",
+      description: "🔓 Hack the mainframe",
       action: () => {
         return [
-          "[*] Initializing hack sequence...",
-          "[*] Bypassing firewall... SUCCESS",
-          "[*] Accessing mainframe... SUCCESS", 
-          "[*] Downloading secrets... 100%",
-          "[!] ALERT: Intrusion detected!",
-          "[*] Covering tracks...",
           "",
-          "Just kidding. This is a portfolio. 😄",
-          "But nice hacker spirit! Maybe try 'matrix' instead.",
+          "  [▓▓▓▓▓▓▓▓▓▓] Initializing hack sequence...",
+          "  [▓▓▓▓▓▓▓▓▓▓] Bypassing firewall........... SUCCESS",
+          "  [▓▓▓▓▓▓▓▓▓▓] Accessing mainframe.......... SUCCESS",
+          "  [▓▓▓▓▓▓▓▓▓▓] Downloading secrets.......... 100%",
+          "  [██████████] ALERT: Intrusion detected!",
+          "  [▓▓▓▓▓▓▓▓▓▓] Covering tracks.............. SUCCESS",
+          "",
+          "  Just kidding. This is a portfolio. 😄",
+          "  But nice hacker spirit! Try 'matrix' for the full effect.",
+          "",
         ].join("\n");
+      },
+    },
+    {
+      name: "sudo",
+      description: "Superuser do",
+      action: () => {
+        const responses = [
+          "You're not root. Nice try though 🤨",
+          "Permission denied. But A for effort!",
+          "sudo: user 'guest' is not in the sudoers file. This incident will be reported.",
+          "🚫 Access denied. Have you tried asking nicely?",
+          "Error: This isn't a real terminal. But you knew that.",
+        ];
+        return `\n  ${responses[Math.floor(Math.random() * responses.length)]}\n`;
       },
     },
   ];
@@ -500,8 +665,8 @@ export function TerminalPalette() {
   }, [isOpen]);
 
   useEffect(() => {
-    if (outputRef.current) {
-      outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [history, output]);
 
@@ -675,7 +840,7 @@ export function TerminalPalette() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-background/50">
+              <div ref={scrollRef} className="flex-1 overflow-auto p-4 font-mono text-sm bg-background/50">
                 <div className="space-y-2">
                   <div className="text-emerald-500 dark:text-emerald-400">
                     Welcome to {siteData.name}&apos;s terminal v1.0.0
@@ -699,7 +864,7 @@ export function TerminalPalette() {
                   ))}
 
                   {output && (
-                    <div className="text-muted-foreground pl-4 whitespace-pre-wrap" ref={outputRef}>
+                    <div className="text-muted-foreground pl-4 whitespace-pre-wrap">
                       {output}
                     </div>
                   )}
@@ -749,15 +914,18 @@ export function TerminalPalette() {
 }
 
 function MatrixEffect() {
-  const [columns, setColumns] = useState<Array<{ chars: string[]; speed: number }>>([]);
+  const [columns, setColumns] = useState<Array<{ chars: string[]; speed: number; y: number }>>([]);
 
   useEffect(() => {
-    const charSet = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const colCount = Math.floor(window.innerWidth / 20);
+    const charSet = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%&*";
+    const colWidth = 18;
+    const colCount = Math.ceil(window.innerWidth / colWidth);
+    const rowCount = Math.ceil(window.innerHeight / 20) + 10; // Extra rows for smooth scrolling
 
     const initialColumns = Array.from({ length: colCount }, () => ({
-      chars: Array.from({ length: 20 }, () => charSet[Math.floor(Math.random() * charSet.length)]),
-      speed: 50 + Math.random() * 50,
+      chars: Array.from({ length: rowCount }, () => charSet[Math.floor(Math.random() * charSet.length)]),
+      speed: 0.5 + Math.random() * 1.5,
+      y: -Math.random() * rowCount * 20, // Start at different positions
     }));
 
     setColumns(initialColumns);
@@ -766,6 +934,7 @@ function MatrixEffect() {
       setColumns((prev) =>
         prev.map((col) => {
           const newChars = [...col.chars];
+          // Shift characters down
           for (let i = newChars.length - 1; i > 0; i--) {
             newChars[i] = newChars[i - 1];
           }
@@ -773,25 +942,42 @@ function MatrixEffect() {
           return { ...col, chars: newChars };
         })
       );
-    }, 100);
+    }, 80);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black pointer-events-none flex gap-[20px] overflow-hidden">
-      {columns.map((col, idx) => (
-        <div key={idx} className="flex flex-col text-green-500 text-sm font-mono" style={{ animationDuration: `${col.speed}ms` }}>
-          {col.chars.map((char, charIdx) => (
-            <span
-              key={charIdx}
-              className={charIdx === 0 ? "text-green-300 text-sm font-bold" : "text-green-600 opacity-70"}
-            >
-              {char}
-            </span>
-          ))}
-        </div>
-      ))}
+    <div className="fixed inset-0 z-[100] bg-black pointer-events-none overflow-hidden">
+      <div className="flex w-full h-full">
+        {columns.map((col, idx) => (
+          <div 
+            key={idx} 
+            className="flex flex-col font-mono leading-tight"
+            style={{ 
+              width: '18px',
+              fontSize: '14px',
+            }}
+          >
+            {col.chars.map((char, charIdx) => (
+              <span
+                key={charIdx}
+                style={{
+                  color: charIdx === 0 
+                    ? '#90EE90' 
+                    : charIdx < 3 
+                      ? '#00FF00' 
+                      : `rgba(0, 255, 0, ${Math.max(0.1, 1 - charIdx * 0.05)})`,
+                  textShadow: charIdx === 0 ? '0 0 8px #00FF00' : 'none',
+                  fontWeight: charIdx === 0 ? 'bold' : 'normal',
+                }}
+              >
+                {char}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
