@@ -66,37 +66,61 @@ export function TerminalPalette() {
   const commands: Command[] = [
     {
       name: "home",
-      description: "Navigate to home page",
-      action: () => router.push("/"),
+      description: "Go to home",
+      action: () => {
+        setTimeout(() => {
+          setIsOpen(false);
+          router.push("/");
+        }, 400);
+        return "\n  → Navigating to home...\n";
+      },
       keywords: ["navigate", "home"],
     },
     {
       name: "experience",
       description: "View experience",
-      action: () => router.push("/experience"),
+      action: () => {
+        setTimeout(() => {
+          setIsOpen(false);
+          router.push("/experience");
+        }, 400);
+        return "\n  → Navigating to experience...\n";
+      },
       keywords: ["navigate", "experience", "work"],
     },
     {
       name: "projects",
       description: "View projects",
-      action: () => router.push("/projects"),
+      action: () => {
+        setTimeout(() => {
+          setIsOpen(false);
+          router.push("/projects");
+        }, 400);
+        return "\n  → Navigating to projects...\n";
+      },
       keywords: ["navigate", "project"],
     },
     {
       name: "about",
-      description: "Scroll to about section",
+      description: "Scroll to about",
       action: () => {
-        setIsOpen(false);
-        document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+        setTimeout(() => {
+          setIsOpen(false);
+          document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+        }, 400);
+        return "\n  → Scrolling to about...\n";
       },
       keywords: ["scroll", "bio"],
     },
     {
       name: "contact",
-      description: "Contact me",
+      description: "Email me",
       action: () => {
-        setIsOpen(false);
-        window.location.href = `mailto:${siteData.email}`;
+        setTimeout(() => {
+          setIsOpen(false);
+          window.location.href = `mailto:${siteData.email}`;
+        }, 400);
+        return "\n  → Opening mail client...\n";
       },
       keywords: ["email", "reach"],
     },
