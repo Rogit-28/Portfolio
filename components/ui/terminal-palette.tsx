@@ -231,13 +231,25 @@ export function TerminalPalette() {
     if (!trimmed) return;
 
     const cmd = findCommand(trimmed);
-    const result = cmd ? cmd.action() : `Command not found: ${trimmed}. Type 'help' for available commands.`;
-
-    const resultStr = result instanceof Promise ? "Loading..." : String(result);
+    
+    let outputText: string | undefined;
+    
+    if (cmd) {
+      // Execute command - it may return a string, void, or Promise
+      const result = cmd.action();
+      
+      // Only capture output if the command explicitly returns a string
+      if (typeof result === "string") {
+        outputText = result;
+      }
+      // If void/undefined, the command handles its own output via setOutput()
+    } else {
+      outputText = `Command not found: ${trimmed}. Type 'help' for available commands.`;
+    }
 
     const newHistoryItem: TerminalHistoryItem = {
       input: trimmed,
-      output: resultStr || undefined,
+      output: outputText,
       timestamp: Date.now(),
     };
 
